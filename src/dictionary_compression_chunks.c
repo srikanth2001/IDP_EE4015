@@ -1,3 +1,5 @@
+// TODO: Size of output is shown to be 100B. Bug might be in line 59, where we need to handle the offset to the fBuff pointer.
+
 /*
  * Copyright (c) Yann Collet, Facebook, Inc.
  * All rights reserved.
@@ -12,6 +14,8 @@
 #include <string.h>    // memset, strcat
 #include <zstd.h>      // presumes zstd library is installed
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+
+const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -25,45 +29,58 @@ static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
     free(dictBuffer);
     return cdict;
 }
- 
- 
+
+int min(int a, int b){
+    return (a < b) ? a : b;
+}
+
 static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdict)
 {
     size_t fSize;
-    void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
-    size_t const cBuffSize = ZSTD_compressBound(fSize);
-    void* const cBuff = malloc_orDie(cBuffSize);
- 
-    /* Compress using the dictionary.
-     * This function writes the dictionary id, and content size into the header.
-     * But, it doesn't use a checksum. You can control these options using the
-     * advanced API: ZSTD_CCtx_setParameter(), ZSTD_CCtx_refCDict(),
-     * and ZSTD_compress2().
-     */
-    ZSTD_CCtx* const cctx = ZSTD_createCCtx();
-    CHECK(cctx != NULL, "ZSTD_createCCtx() failed!");
-    size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, fBuff, fSize, cdict);
-    CHECK_ZSTD(cSize);
- 
-    saveFile_orDie(oname, cBuff, cSize);
- 
-    /* success */
-    printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)cSize, oname);
- 
-    ZSTD_freeCCtx(cctx);   /* never fails */
+    char* fBuff = (char*)mallocAndLoadFile_orDie(fname, &fSize);
+    int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
+    char* out = (char*)malloc_orDie(fSize);
+
+    for(int chunk = 0; chunk < numOfChunks; chunk++){
+        int offset = chunk * CHUNK_SIZE;
+        size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
+        // printf("%ld ", realSize);
+        size_t const cBuffSize = ZSTD_compressBound(realSize);
+        void* const cBuff = malloc_orDie(cBuffSize);
+    
+        /* Compress using the dictionary.
+        * This function writes the dictionary id, and content size into the header.
+        * But, it doesn't use a checksum. You can control these options using the
+        * advanced API: ZSTD_CCtx_setParameter(), ZSTD_CCtx_refCDict(),
+        * and ZSTD_compress2().
+        */
+        ZSTD_CCtx* const cctx = ZSTD_createCCtx();
+        CHECK(cctx != NULL, "ZSTD_createCCtx() failed!");
+        size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, fBuff + offset, realSize, cdict);
+        CHECK_ZSTD(cSize);
+    
+        strcat(out, (char*)cBuff);
+        printf("%d ", strlen((char*)cBuff));
+    
+        ZSTD_freeCCtx(cctx);   /* never fails */
+        free(cBuff);
+    }
     free(fBuff);
-    free(cBuff);
+    size_t outSize = strlen(out);
+    saveFile_orDie(oname, out, outSize);
+    /* success */
+    printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)outSize, oname);
 }
  
  
 static char* createOutFilename_orDie(const char* filename)
 {
     size_t const inL = strlen(filename);
-    size_t const outL = inL + 5;
+    size_t const outL = inL + 20;
     void* outSpace = malloc_orDie(outL);
     memset(outSpace, 0, outL);
     strcat(outSpace, filename);
-    strcat(outSpace, ".zst");
+    strcat(outSpace, "_dict_chunks.zst");
     return (char*)outSpace;
 }
  
