@@ -3,10 +3,10 @@
 ## Create a dictionary
 * Navigate to the folder containing your text files.
 * Execute the following command.
-``` $ zstd --train -B1048576 --maxdict=102400 -o ../src/dict.zdict -r . ```
+``` $ zstd --train -B10240 --maxdict=102400 -o ../src/dict.zdict -r . ```
 
 `--maxdict` flag is to specify the max size of the dictionary to be 100KB.
-`-B` flag is to specify the chunk size of 1MB.
+`-B` flag is to specify the chunk size of 10KB.
 **Note:** You can either train the dictionary on a large number of small files, or you can divide a large file into small chunks.
 * For more info, check https://manpages.debian.org/testing/zstd/zstd.1.en.html
 
