@@ -44,7 +44,6 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     CHECK(cctx != NULL, "ZSTD_createCCtx() failed!");
     size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, fBuff, fSize, cdict);
     CHECK_ZSTD(cSize);
- 
     saveFile_orDie(oname, cBuff, cSize);
  
     /* success */
@@ -59,11 +58,11 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 static char* createOutFilename_orDie(const char* filename)
 {
     size_t const inL = strlen(filename);
-    size_t const outL = inL + 5;
+    size_t const outL = inL + 20;
     void* outSpace = malloc_orDie(outL);
     memset(outSpace, 0, outL);
     strcat(outSpace, filename);
-    strcat(outSpace, ".zst");
+    strcat(outSpace, "_dict.zst");
     return (char*)outSpace;
 }
  
