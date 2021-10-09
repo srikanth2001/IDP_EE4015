@@ -36,10 +36,10 @@ int min(int a, int b){
 
 static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdict)
 {
-    size_t fSize;
-    char* fBuff = (char*)mallocAndLoadFile_orDie(fname, &fSize);
+    size_t fSize, outSize = 0;
+    void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
     int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
-    char* out = (char*)malloc_orDie(fSize);
+    void* const out = malloc_orDie(fSize);
 
     for(int chunk = 0; chunk < numOfChunks; chunk++){
         int offset = chunk * CHUNK_SIZE;
@@ -56,18 +56,19 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         */
         ZSTD_CCtx* const cctx = ZSTD_createCCtx();
         CHECK(cctx != NULL, "ZSTD_createCCtx() failed!");
-        size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, fBuff + offset, realSize, cdict);
+        size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, (unsigned char*)fBuff + offset, realSize, cdict);
         CHECK_ZSTD(cSize);
-    
-        strcat(out, (char*)cBuff);
-        printf("%d ", strlen((char*)cBuff));
+
+        memcpy((unsigned char*)out + offset, cBuff, cSize);
+        outSize += cSize;
     
         ZSTD_freeCCtx(cctx);   /* never fails */
         free(cBuff);
     }
     free(fBuff);
-    size_t outSize = strlen(out);
+    
     saveFile_orDie(oname, out, outSize);
+    free(out);
     /* success */
     printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)outSize, oname);
 }

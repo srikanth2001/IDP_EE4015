@@ -27,6 +27,7 @@ static void compress_orDie(const char* fname, const char* oname)
      */
     size_t const cSize = ZSTD_compress(cBuff, cBuffSize, fBuff, fSize, 1);
     CHECK_ZSTD(cSize);
+    printf("%ld ", strlen((char*)cBuff));
  
     saveFile_orDie(oname, cBuff, cSize);
  
