@@ -41,8 +41,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
     void* const out = malloc_orDie(fSize);
 
-    for(int chunk = 0; chunk < numOfChunks; chunk++){
-        int offset = chunk * CHUNK_SIZE;
+    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
         size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
         // printf("%ld ", realSize);
         size_t const cBuffSize = ZSTD_compressBound(realSize);
@@ -59,7 +58,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, (unsigned char*)fBuff + offset, realSize, cdict);
         CHECK_ZSTD(cSize);
 
-        memcpy((unsigned char*)out + offset, cBuff, cSize);
+        memcpy((unsigned char*)out + outSize, cBuff, cSize);
         outSize += cSize;
     
         ZSTD_freeCCtx(cctx);   /* never fails */
