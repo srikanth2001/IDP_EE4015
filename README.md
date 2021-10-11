@@ -26,3 +26,6 @@ S. no. | Type of Compression  | Compressed size (in Bytes) | Compression ratio
 | 1 | Simple Compression | 40,667,764 | 2.459 |
 | 2 | Dictionary Compression | 35,631,311 | 2.806 |
 | 3 | Dictionay Compression using chunks | 35,598,780 | 2.809 |
+
+## Links
+For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
