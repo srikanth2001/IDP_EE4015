@@ -60,10 +60,6 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
      * content size is always written into the header, either use streaming
      * decompression, or ZSTD_decompressBound().
      */
-    unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + headerSize, cSize - headerSize);
-    CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
-    CHECK(rSize != ZSTD_CONTENTSIZE_UNKNOWN, "%s: original size unknown!", fname);
-    void* const rBuff = malloc_orDie((size_t)rSize);
  
     /* Check that the dictionary ID matches.
      * If a non-zstd dictionary is used, then both will be zero.
@@ -90,6 +86,10 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
 
     for(int chunk = 0, pos = offset + table[0]; chunk < numOfChunks; chunk++){
         size_t chunkSize = table[chunk + 1] - table[chunk];
+        unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, chunkSize);
+        CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
+        CHECK(rSize != ZSTD_CONTENTSIZE_UNKNOWN, "%s: original size unknown!", fname);
+        void* const rBuff = malloc_orDie((size_t)rSize);
 
         size_t const dSize = ZSTD_decompress_usingDDict(dctx, rBuff, rSize, (unsigned char*)cBuff + pos, chunkSize, ddict);
         CHECK_ZSTD(dSize);
@@ -97,13 +97,13 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
         CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
 
         pos += chunkSize;
+        free(rBuff);
     }
  
     /* success */
     printf("%25s : %6u -> %7u \n", fname, (unsigned)cSize, (unsigned)rSize);
  
     ZSTD_freeDCtx(dctx);
-    free(rBuff);
     free(cBuff);
 }
  
