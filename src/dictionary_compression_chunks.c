@@ -1,5 +1,3 @@
-// TODO: Size of output is shown to be 100B. Bug might be in line 59, where we need to handle the offset to the fBuff pointer.
-
 /*
  * Copyright (c) Yann Collet, Facebook, Inc.
  * All rights reserved.
@@ -40,6 +38,12 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
     int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
     void* const out = malloc_orDie(fSize);
+    void* const header = malloc_orDie(10 * (numOfChunks + 1)); // For indexes < 10^10
+
+    char buff[11];
+    sprintf(buff, "%d ", numOfChunks);
+    memcpy((unsigned char*)header, buff, strlen(buff));
+    size_t headerSize = strlen(buff);
 
     for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
         size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
@@ -59,6 +63,11 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         CHECK_ZSTD(cSize);
 
         memcpy((unsigned char*)out + outSize, cBuff, cSize);
+
+        sprintf(buff, "%ld ", outSize);
+        memcpy((unsigned char*)header + headerSize, buff, strlen(buff));
+        
+        headerSize += strlen(buff);
         outSize += cSize;
     
         ZSTD_freeCCtx(cctx);   /* never fails */
@@ -66,10 +75,12 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     }
     free(fBuff);
     
-    saveFile_orDie(oname, out, outSize);
+    saveFile_orDie(oname, header, headerSize, "wb");
+    saveFile_orDie(oname, out, outSize, "ab");
     free(out);
+    free(header);
     /* success */
-    printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)outSize, oname);
+    printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)(headerSize + outSize), oname);
 }
  
  

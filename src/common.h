@@ -217,9 +217,9 @@ static void* mallocAndLoadFile_orDie(const char* fileName, size_t* bufferSize) {
  * Note: This function will send an error to stderr and exit if it
  * cannot write to a given file.
  */
-static void saveFile_orDie(const char* fileName, const void* buff, size_t buffSize)
+static void saveFile_orDie(const char* fileName, const void* buff, size_t buffSize, const char* mode)
 {
-    FILE* const oFile = fopen_orDie(fileName, "wb");
+    FILE* const oFile = fopen_orDie(fileName, mode);
     size_t const wSize = fwrite(buff, 1, buffSize, oFile);
     if (wSize != (size_t)buffSize) {
         fprintf(stderr, "fwrite: %s : %s \n", fileName, strerror(errno));

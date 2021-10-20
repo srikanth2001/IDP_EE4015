@@ -1,3 +1,5 @@
+// TODO: Write content of the decompressed data to a file
+
 /*
  * Copyright (c) Yann Collet, Facebook, Inc.
  * All rights reserved.
@@ -11,10 +13,11 @@
  
 #include <stdio.h>     // printf
 #include <stdlib.h>    // free
+#include <string.h>    // strtok
 #include <zstd.h>      // presumes zstd library is installed
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-int numOfChunks = 20;
+static int numOfChunks, headerSize = 0;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -28,18 +31,36 @@ static ZSTD_DDict* createDict_orDie(const char* dictFileName)
     free(dictBuffer);
     return ddict;
 }
+
+int* readHeader(void* const cBuff, size_t cSize){
+    char delim[2] = " ";
+    char* token = strtok((unsigned char*)cBuff, delim);
+    headerSize += strlen(token);
+    char* ptr;
+    numOfChunks = strtol(token, ptr, 10);
+    int* table = malloc_orDie(sizeof(int) * (numOfChunks + 1));
+    for(int cnt = 0; cnt < numOfChunks; cnt++){
+        token = strtok(NULL, delim);
+        headerSize += strlen(token);
+        table[cnt] = strtol(token, ptr, 10);
+    }
+    return table;
+}
  
 static void decompress(const char* fname, const ZSTD_DDict* ddict)
 {
     size_t cSize;
     void* const cBuff = mallocAndLoadFile_orDie(fname, &cSize);
+    
+    int* table = readHeader(cBuff, cSize);
+
     /* Read the content size from the frame header. For simplicity we require
      * that it is always present. By default, zstd will write the content size
      * in the header when it is known. If you can't guarantee that the frame
      * content size is always written into the header, either use streaming
      * decompression, or ZSTD_decompressBound().
      */
-    unsigned long long const rSize = ZSTD_getFrameContentSize(cBuff, cSize);
+    unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + headerSize, cSize - headerSize);
     CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
     CHECK(rSize != ZSTD_CONTENTSIZE_UNKNOWN, "%s: original size unknown!", fname);
     void* const rBuff = malloc_orDie((size_t)rSize);
@@ -63,10 +84,20 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
      */
     ZSTD_DCtx* const dctx = ZSTD_createDCtx();
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
-    size_t const dSize = ZSTD_decompress_usingDDict(dctx, rBuff, rSize, cBuff, cSize, ddict);
-    CHECK_ZSTD(dSize);
-    /* When zstd knows the content size, it will error if it doesn't match. */
-    CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
+
+    int offset = headerSize; 
+    table[numOfChunks] = cSize - offset;
+
+    for(int chunk = 0, pos = offset + table[0]; chunk < numOfChunks; chunk++){
+        size_t chunkSize = table[chunk + 1] - table[chunk];
+
+        size_t const dSize = ZSTD_decompress_usingDDict(dctx, rBuff, rSize, (unsigned char*)cBuff + pos, chunkSize, ddict);
+        CHECK_ZSTD(dSize);
+        /* When zstd knows the content size, it will error if it doesn't match. */
+        CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
+
+        pos += chunkSize;
+    }
  
     /* success */
     printf("%25s : %6u -> %7u \n", fname, (unsigned)cSize, (unsigned)rSize);
@@ -75,7 +106,6 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
     free(rBuff);
     free(cBuff);
 }
- 
  
 int main(int argc, const char** argv)
 {
