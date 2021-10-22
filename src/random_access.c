@@ -1,3 +1,6 @@
+// TODO: How to get the input indices from the lookup table data
+/* For decompression with random access. The code is almost the same as dictionary_decompression_chunks.c except 
+for the random access part. */
 /*
  * Copyright (c) Yann Collet, Facebook, Inc.
  * All rights reserved.
@@ -16,8 +19,8 @@
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 static int numOfChunks, headerSize = 0;
-
-struct entry{
+ 
+struct entry{ // look-up table entry
     int cPos, inPos, inSize;
 };
  
@@ -56,8 +59,20 @@ struct entry* readHeader(void* const cBuff, size_t cSize){
     }
     return table;
 }
+
+int getChunkIndex(int idx, struct entry* table){ // Binary search for the chunk's index
+    int l = 0, r = numOfChunks - 1;
+    while(l <= r){
+        int m = l + (r - l) / 2;
+        if(idx >= table[m].inPos && idx < table[m + 1].inPos)
+            return m;
+        if(idx > table[m].inPos) l = m + 1;
+        else r = m - 1;
+    }
+    return -1;
+}
  
-static void decompress(const char* fname, const char* oname, const ZSTD_DDict* ddict)
+static void decompress(const char* fname, int start, int end, const ZSTD_DDict* ddict)
 {
     size_t cSize;
     void* const cBuff = mallocAndLoadFile_orDie(fname, &cSize);
@@ -91,13 +106,21 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     ZSTD_DCtx* const dctx = ZSTD_createDCtx();
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
 
-    int offset = headerSize;
-    unsigned long long outSize = 0; 
-    table[numOfChunks] = (struct entry){cSize - offset, table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize, 0};
+    table[numOfChunks] = (struct entry){cSize - headerSize, table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize, 0};
 
-    void* const out = malloc_orDie(4ll * (long long)cSize); // Assuming the max. compression ratio is 4
+    int startChunk = getChunkIndex(start, table), endChunk = getChunkIndex(end, table); 
+    // printf("%d %d\n", startChunk, endChunk);
+    if(startChunk == -1 || endChunk == -1){
+        printf("Invalid start or end positions\n");
+        exit(1);
+    }
 
-    for(int chunk = 0, pos = offset + table[0].cPos; chunk < numOfChunks; chunk++){
+    unsigned long long outSize = 0;
+    void* const out = malloc_orDie(end - start + 10); 
+    memset(out, 0, end - start + 10);
+    int pos = headerSize + table[startChunk].cPos;
+
+    for(int chunk = startChunk; chunk <= endChunk; chunk++){
         size_t chunkSize = table[chunk + 1].cPos - table[chunk].cPos;
         unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, chunkSize);
         CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
@@ -109,19 +132,34 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
         /* When zstd knows the content size, it will error if it doesn't match. */
         CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
 
-        memcpy((unsigned char*)out + outSize, rBuff, rSize); // Copying rBuff to out
+        if(startChunk == endChunk){
+            unsigned long long notReql = start - table[chunk].inPos, notReqr = table[chunk + 1].inPos - end;
+            memcpy((unsigned char*)out + outSize, rBuff + notReql, rSize - notReql - notReqr); // Copying rBuff to out
+            outSize += rSize - notReql - notReqr;
+        }
+        else if(chunk == startChunk){
+            unsigned long long notReq = start - table[chunk].inPos;
+            memcpy((unsigned char*)out + outSize, rBuff + notReq, rSize - notReq); // Copying rBuff to out
+            outSize += rSize - notReq;
+        }
+        else if(chunk == endChunk){
+            unsigned long long notReq = table[chunk + 1].inPos - end;
+            memcpy((unsigned char*)out + outSize, rBuff, rSize - notReq); // Copying rBuff to out
+            outSize += rSize - notReq;
+        }
+        else{
+            memcpy((unsigned char*)out + outSize, rBuff, rSize); // Copying rBuff to out
+            outSize += rSize; 
+        }
         pos += chunkSize;
-        outSize += rSize;
         free(rBuff);
     }
-    
-    saveFile_orDie(oname, out, outSize, "wb");
+
+    printf("Decompression successful!\nThe decompressed string is:\n%s\n", (unsigned char*)out);
     ZSTD_freeDCtx(dctx);
-    free(out);
     free(cBuff);
     free(table);
-    /* success */
-    printf("%25s : %6u -> %25s : %7u \n", fname, (unsigned)cSize, oname, (unsigned)outSize);
+    free(out);
 }
 
 static char* createOutFilename_orDie(const char* filename)
@@ -153,12 +191,14 @@ int main(int argc, const char** argv)
     int u;
     for (u=1; u<argc-1; u++){
         const char* inFilename = argv[u];
-        char* const outFilename = createOutFilename_orDie(inFilename);
-        decompress(inFilename, outFilename, dictPtr);
-        free(outFilename);
+        int start = 0, end = 100; // start and end indices of the target string
+        // printf("%d %d\n", start, end);
+        // char* const outFilename = createOutFilename_orDie(inFilename);
+        decompress(inFilename, start, end, dictPtr);
+        // free(outFilename);
     }
  
     ZSTD_freeDDict(dictPtr);
-    printf("All %u files correctly decoded\n", argc-2);
+    // printf("All %u files correctly decoded (in memory) \n", argc-2);
     return 0;
 }

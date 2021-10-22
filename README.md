@@ -16,7 +16,7 @@
 * For linking, use
     ```$ gcc -L/usr/local/lib/ dictionary_compression.o -o dict_compressor -lzstd```
 * This will create an executable file called dict_compressor. To run this, use
-    ```$ ./compressor raw_filename dict.zdict```
+    ```$ ./dict_compressor raw_filename dict.zdict```
 
 ## Results
 
