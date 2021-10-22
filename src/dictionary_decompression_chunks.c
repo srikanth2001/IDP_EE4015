@@ -81,7 +81,8 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
     ZSTD_DCtx* const dctx = ZSTD_createDCtx();
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
 
-    int offset = headerSize; 
+    int offset = headerSize;
+    unsigned long long totalSize = 0; 
     table[numOfChunks] = cSize - offset;
 
     for(int chunk = 0, pos = offset + table[0]; chunk < numOfChunks; chunk++){
@@ -89,7 +90,7 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
         unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, chunkSize);
         CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
         CHECK(rSize != ZSTD_CONTENTSIZE_UNKNOWN, "%s: original size unknown!", fname);
-        void* const rBuff = malloc_orDie((size_t)rSize);
+        void* const rBuff = malloc_orDie((size_t)rSize); // To store the decompressed data
 
         size_t const dSize = ZSTD_decompress_usingDDict(dctx, rBuff, rSize, (unsigned char*)cBuff + pos, chunkSize, ddict);
         CHECK_ZSTD(dSize);
@@ -97,11 +98,12 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
         CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
 
         pos += chunkSize;
+        totalSize += rSize;
         free(rBuff);
     }
  
     /* success */
-    printf("%25s : %6u -> %7u \n", fname, (unsigned)cSize, (unsigned)rSize);
+    printf("%25s : %6u -> %7u \n", fname, (unsigned)cSize, (unsigned)totalSize);
  
     ZSTD_freeDCtx(dctx);
     free(cBuff);
