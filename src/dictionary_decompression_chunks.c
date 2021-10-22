@@ -34,20 +34,20 @@ static ZSTD_DDict* createDict_orDie(const char* dictFileName)
 
 int* readHeader(void* const cBuff, size_t cSize){
     char delim[2] = " ";
-    char* token = strtok((unsigned char*)cBuff, delim);
-    headerSize += strlen(token);
+    char* token = strtok((char*)cBuff, delim);
+    headerSize += strlen(token) + 1;
     char* ptr;
-    numOfChunks = strtol(token, ptr, 10);
+    numOfChunks = strtol(token, &ptr, 10);
     int* table = malloc_orDie(sizeof(int) * (numOfChunks + 1));
     for(int cnt = 0; cnt < numOfChunks; cnt++){
         token = strtok(NULL, delim);
-        headerSize += strlen(token);
-        table[cnt] = strtol(token, ptr, 10);
+        headerSize += strlen(token) + 1;
+        table[cnt] = strtol(token, &ptr, 10);
     }
     return table;
 }
  
-static void decompress(const char* fname, const ZSTD_DDict* ddict)
+static void decompress(const char* fname, const char* oname, const ZSTD_DDict* ddict)
 {
     size_t cSize;
     void* const cBuff = mallocAndLoadFile_orDie(fname, &cSize);
@@ -67,11 +67,11 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
      * Zstd will check if there is a dictionary ID mismatch as well.
      */
     unsigned const expectedDictID = ZSTD_getDictID_fromDDict(ddict);
-    unsigned const actualDictID = ZSTD_getDictID_fromFrame(cBuff, cSize);
+    unsigned const actualDictID = ZSTD_getDictID_fromFrame(cBuff + headerSize, cSize);
     CHECK(actualDictID == expectedDictID,
           "DictID mismatch: expected %u got %u",
           expectedDictID,
-          actualDictID);
+          actualDictID); 
  
     /* Decompress using the dictionary.
      * If you need to control the decompression parameters, then use the
@@ -82,8 +82,10 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
 
     int offset = headerSize;
-    unsigned long long totalSize = 0; 
+    unsigned long long outSize = 0; 
     table[numOfChunks] = cSize - offset;
+
+    void* const out = malloc_orDie(4ll * (long long)cSize); // Assuming the max. compression ratio is 4
 
     for(int chunk = 0, pos = offset + table[0]; chunk < numOfChunks; chunk++){
         size_t chunkSize = table[chunk + 1] - table[chunk];
@@ -97,16 +99,29 @@ static void decompress(const char* fname, const ZSTD_DDict* ddict)
         /* When zstd knows the content size, it will error if it doesn't match. */
         CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
 
+        memcpy((unsigned char*)out + outSize, rBuff, rSize); // Copying rBuff to out
         pos += chunkSize;
-        totalSize += rSize;
+        outSize += rSize;
         free(rBuff);
     }
- 
-    /* success */
-    printf("%25s : %6u -> %7u \n", fname, (unsigned)cSize, (unsigned)totalSize);
- 
+    
+    saveFile_orDie(oname, out, outSize, "wb");
     ZSTD_freeDCtx(dctx);
     free(cBuff);
+    free(table);
+    /* success */
+    printf("%25s : %6u -> %25s : %7u \n", fname, (unsigned)cSize, oname, (unsigned)outSize);
+}
+
+static char* createOutFilename_orDie(const char* filename)
+{
+    size_t const inL = strlen(filename);
+    size_t const outL = inL;
+    char* outSpace = (char*)malloc_orDie(sizeof(char) * outL);
+    memset(outSpace, 0, sizeof(char) * outL);
+    for(int i = 0; i < inL - 4; i++) // remove the .zst part
+        outSpace[i] = filename[i];
+    return outSpace;
 }
  
 int main(int argc, const char** argv)
@@ -125,7 +140,12 @@ int main(int argc, const char** argv)
     ZSTD_DDict* const dictPtr = createDict_orDie(dictName);
  
     int u;
-    for (u=1; u<argc-1; u++) decompress(argv[u], dictPtr);
+    for (u=1; u<argc-1; u++){
+        const char* inFilename = argv[u];
+        char* const outFilename = createOutFilename_orDie(inFilename);
+        decompress(inFilename, outFilename, dictPtr);
+        free(outFilename);
+    }
  
     ZSTD_freeDDict(dictPtr);
     printf("All %u files correctly decoded (in memory) \n", argc-2);

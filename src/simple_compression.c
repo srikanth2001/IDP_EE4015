@@ -29,7 +29,7 @@ static void compress_orDie(const char* fname, const char* oname)
     CHECK_ZSTD(cSize);
     printf("%ld ", strlen((char*)cBuff));
  
-    saveFile_orDie(oname, cBuff, cSize);
+    saveFile_orDie(oname, cBuff, cSize, "wb");
  
     /* success */
     printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)cSize, oname);

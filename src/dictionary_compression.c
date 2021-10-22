@@ -44,7 +44,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     CHECK(cctx != NULL, "ZSTD_createCCtx() failed!");
     size_t const cSize = ZSTD_compress_usingCDict(cctx, cBuff, cBuffSize, fBuff, fSize, cdict);
     CHECK_ZSTD(cSize);
-    saveFile_orDie(oname, cBuff, cSize);
+    saveFile_orDie(oname, cBuff, cSize, "wb");
  
     /* success */
     printf("%25s : %6u -> %7u - %s \n", fname, (unsigned)fSize, (unsigned)cSize, oname);
