@@ -1,5 +1,3 @@
-// TODO: Write content of the decompressed data to a file
-
 /*
  * Copyright (c) Yann Collet, Facebook, Inc.
  * All rights reserved.
