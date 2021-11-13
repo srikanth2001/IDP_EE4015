@@ -16,6 +16,7 @@
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 static int numOfChunks, headerSize = 0;
+static double sumOfTimes = 0;
 
 struct entry{
     int cPos, inPos, inSize;
@@ -151,10 +152,15 @@ int main(int argc, const char** argv)
     ZSTD_DDict* const dictPtr = createDict_orDie(dictName);
  
     int u;
+    const int noi = 10;
     for (u=1; u<argc-1; u++){
         const char* inFilename = argv[u];
         char* const outFilename = createOutFilename_orDie(inFilename);
-        decompress(inFilename, outFilename, dictPtr);
+
+        for(int iter = 0; iter < noi; iter++){
+            decompress(inFilename, outFilename, dictPtr);
+        }
+
         free(outFilename);
     }
  

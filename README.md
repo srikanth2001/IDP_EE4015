@@ -12,11 +12,11 @@
 
 ## Compiling
 * To compile dictionary_compression, run
-    ```$ gcc -Wall -I/usr/local/include/ -c dictionary_compression.c -lm```
+    ```$ gcc -Wall -I/usr/local/include/ -c dictionary_compression_chunks.c -lm```
 * For linking, use
-    ```$ gcc -L/usr/local/lib/ dictionary_compression.o -o dict_compressor -lzstd```
+    ```$ gcc -L/usr/local/lib/ dictionary_compression_chunks.o -o dict_compressor_chunks -lzstd```
 * This will create an executable file called dict_compressor. To run this, use
-    ```$ ./dict_compressor raw_filename dict.zdict```
+    ```$ ./dict_compressor_chunks raw_filename dict.zdict```
 
 ## Results
 

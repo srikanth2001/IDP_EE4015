@@ -26,7 +26,6 @@ static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
     return cdict;
 }
  
- 
 static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdict)
 {
     size_t fSize;
