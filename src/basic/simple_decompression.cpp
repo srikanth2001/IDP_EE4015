@@ -11,7 +11,7 @@
 #include <stdio.h>     // printf
 #include <stdlib.h>    // free
 #include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
  
 static void decompress(const char* fname)
 {

@@ -11,7 +11,7 @@
 #include <stdlib.h>    // free
 #include <string.h>    // memset, strcat
 #include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
  

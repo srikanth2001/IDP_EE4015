@@ -12,7 +12,7 @@
 #include <stdlib.h>    // free
 #include <string.h>    // strlen, strcat, memset
 #include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
  
 static void compress_orDie(const char* fname, const char* oname)
 {

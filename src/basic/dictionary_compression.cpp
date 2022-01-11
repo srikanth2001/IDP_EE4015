@@ -11,7 +11,7 @@
 #include <stdlib.h>    // free
 #include <string.h>    // memset, strcat
 #include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
