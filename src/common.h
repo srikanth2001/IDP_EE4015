@@ -20,6 +20,9 @@
 #include <errno.h>     // errno
 #include <sys/stat.h>  // stat
 #include <zstd.h>
+#include <sdsl/bit_vectors.hpp>
+
+using namespace sdsl;
  
 /*
  * Define the returned error code from utility functions.
@@ -229,6 +232,32 @@ static void saveFile_orDie(const char* fileName, const void* buff, size_t buffSi
         perror(fileName);
         exit(ERROR_fclose);
     }
+}
+
+// Construct bit vector from the pointer to a byte array
+bit_vector constructBitVectorFromArray(const void* data, size_t dataSize){
+    bit_vector b(dataSize * 8ll);
+    for(int i = 0; i < (int)dataSize; i++){
+        unsigned char currByte = *((unsigned char*)data + i);
+        for(int pos = 0; pos < 8; pos++){
+            b[8 * i + pos] = (bool)((currByte >> (7 - pos)) & 1);
+        }
+    }
+    return b;
+}
+
+// Construct byte array from compressed bit vector
+void* constructArrayFromBitVector(sd_vector<>& sdb){
+    size_t dataSize = (sdb.size() + 7) / 8; // Size of b in bytes
+    void* data = malloc_orDie(dataSize);
+    for(int i = 0; i < (int)dataSize; i++){
+        unsigned char currByte = 0;
+        for(int pos = 0; pos < 8 && (size_t)(8 * i + pos) < sdb.size(); pos++){
+            currByte |= (unsigned char)(sdb[8 * i + pos] * (1 << (7 - pos)));
+        }
+        *((unsigned char*)data + i) = currByte;
+    }
+    return data;
 }
  
 #endif
