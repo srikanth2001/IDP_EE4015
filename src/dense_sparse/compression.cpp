@@ -74,7 +74,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
     int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
 
-    void* const header = malloc_orDie(20 * (numOfChunks + 1)); // Increase the header capacity for larger files
+    void* const header = malloc_orDie(50 * (numOfChunks + 1)); // Increase the header capacity for larger files
 
     // Compressing the file to compute entropy of the file X
     printf("Computing entropy of the file.........\n");
@@ -93,7 +93,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     const size_t threshold = (size_t)(CHUNK_SIZE * (1 + eps) * H_X);
 
     char hBuff[40];
-    sprintf(hBuff, "%d\n%ld\n", numOfChunks, threshold);
+    sprintf(hBuff, "%d %ld %d ", numOfChunks, threshold, CHUNK_SIZE);
     memcpy((unsigned char*)header, hBuff, strlen(hBuff));
     int headerSize = strlen(hBuff);
     
@@ -125,7 +125,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         denseOffset += threshold;
         sparseOffset += CHUNK_SIZE;
 
-        sprintf(hBuff, "%ld\n", cSize); // Store the compressed size for each chunk in the header.
+        sprintf(hBuff, "%ld ", cSize); // Store the compressed size for each chunk in the header.
         memcpy((unsigned char*)header + headerSize, hBuff, strlen(hBuff));
         headerSize += strlen(hBuff);
 
@@ -137,7 +137,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
     // Write contents to file
     filePutContents(oname, header, headerSize);
-    filePutContents(oname, denseStream, headerSize, true);
+    filePutContents(oname, denseStream, denseSize, true);
     filePutContents(oname, cSparse, true);
     ZSTD_freeCCtx(cctx);   /* never fails */
     free(fBuff);
