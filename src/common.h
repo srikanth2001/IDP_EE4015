@@ -259,5 +259,15 @@ void* constructArrayFromBitVector(sd_vector<>& sdb){
     }
     return data;
 }
+
+// Copy contents from an array to a bit-vector
+void copyToBitVector(bit_vector& b, unsigned char* data, size_t bOffset, size_t size){
+    for(size_t i = 0; i < size; i++){
+        unsigned char currByte = *(data + i);
+        for(int pos = 0; pos < 8; pos++){
+            b[8 * (i + bOffset) + pos] = (bool)((currByte >> (7 - pos)) & 1);
+        }
+    }
+}
  
 #endif

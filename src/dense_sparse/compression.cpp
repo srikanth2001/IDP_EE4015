@@ -29,13 +29,6 @@ int min(int a, int b){
     return (a < b) ? a : b;
 }
 
-sd_vector<> bitVectorCompress(void* const data, size_t dataSize){
-    bit_vector b = constructBitVectorFromArray(data, dataSize);
-    // Compress using sparse bit vector compressor
-    sd_vector<> sdb(b);    
-    return sdb;
-}
-
 void filePutContents(const char* fname, const void* ptr, const size_t size, bool append = false){
     ofstream out;
     if (append)
@@ -99,9 +92,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     
     size_t denseSize = numOfChunks * threshold, sparseSize = numOfChunks * CHUNK_SIZE;
     void* const denseStream = malloc_orDie(denseSize);
-    void* const sparseStream = malloc_orDie(sparseSize);
+    bit_vector sparseStream(8 * sparseSize, 0);
     memset((unsigned char*)denseStream, 0, sizeof(unsigned char) * denseSize);
-    memset((unsigned char*)sparseStream, 0, sizeof(unsigned char) * sparseSize);
     size_t denseOffset = 0, sparseOffset = 0;
 
     for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
@@ -119,7 +111,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         }
         else{
             memcpy((unsigned char*)denseStream + denseOffset, cBuff, threshold);
-            memcpy((unsigned char*)sparseStream + sparseOffset, (unsigned char*)cBuff + threshold, cSize - threshold);
+            copyToBitVector(sparseStream, (unsigned char*)cBuff + threshold, sparseOffset, cSize - threshold);
         }
 
         denseOffset += threshold;
@@ -133,7 +125,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     }
 
     printf("Compressing the sparse stream using bit-vector-compressor........\n");
-    sd_vector<> cSparse = bitVectorCompress(sparseStream, sparseSize);
+
+    sd_vector<> cSparse(sparseStream);
 
     // Write contents to file
     filePutContents(oname, header, headerSize);
@@ -142,7 +135,6 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     ZSTD_freeCCtx(cctx);   /* never fails */
     free(fBuff);
     free(denseStream);
-    free(sparseStream);
     free(header);
     /* success */
     printf("%25s : %6ld -> %7ld - %s \n", fname, fSize, headerSize + denseSize + size_in_bytes(cSparse), oname);
