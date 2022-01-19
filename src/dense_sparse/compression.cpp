@@ -3,6 +3,7 @@
 #include <string.h>    // memset, strcat
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
 #include <fstream>
+#include <iostream>
 #include <sdsl/bit_vectors.hpp>
 #include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
@@ -10,7 +11,7 @@ using namespace sdsl;
 using namespace std;
 
 const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
-const double eps = 0.1;
+const double eps = 0.01;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
