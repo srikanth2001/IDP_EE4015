@@ -1,25 +1,16 @@
-/*
- * Copyright (c) Yann Collet, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under both the BSD-style license (found in the
- * LICENSE file in the root directory of this source tree) and the GPLv2 (found
- * in the COPYING file in the root directory of this source tree).
- * You may select, at your option, one of the above-listed licenses.
- */
- 
- 
 #include <stdio.h>     // printf
 #include <stdlib.h>    // free
-#include <string.h>    // strtok
-#include <zstd.h>      // presumes zstd library is installed
+#include <string.h>    // memset, strcat
+#include <zstd.h>      // presumes zstd and sdsl libraries are installed
+#include <fstream>
+#include <sdsl/bit_vectors.hpp>
 #include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-static int numOfChunks, headerSize = 0;
+using namespace sdsl;
+using namespace std;
 
-struct entry{
-    int cPos, inPos, inSize;
-};
+static int numOfChunks, headerSize = 0;
+static size_t threshold, chunkSize;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -34,92 +25,109 @@ static ZSTD_DDict* createDict_orDie(const char* dictFileName)
     return ddict;
 }
 
-struct entry* readHeader(void* const cBuff, size_t cSize){
+void readHeader(size_t** cLengths, void* const cBuff, size_t cSize){
     char delim[2] = " ";
     char* token = strtok((char*)cBuff, delim);
     headerSize += strlen(token) + 1;
     char* ptr;
-    numOfChunks = strtol(token, &ptr, 10);
+    numOfChunks = (int)strtol(token, &ptr, 10);
 
-    struct entry* table = (struct entry*)malloc_orDie(sizeof(struct entry) * (numOfChunks + 1));
+    token = strtok(NULL, delim);
+    headerSize += strlen(token) + 1;
+    threshold = (size_t)strtol(token, &ptr, 10);
 
-    for(int cnt = 0; cnt < numOfChunks; cnt++){
+    token = strtok(NULL, delim);
+    headerSize += strlen(token) + 1;
+    chunkSize = (size_t)strtol(token, &ptr, 10);
+
+    *cLengths = (size_t*)malloc_orDie(sizeof(size_t) * (numOfChunks + 1));
+    for(int i = 0; i < numOfChunks; i++){
         token = strtok(NULL, delim);
-        table[cnt].cPos = strtol(token, &ptr, 10);
         headerSize += strlen(token) + 1;
-        token = strtok(NULL, delim);
-        headerSize += strlen(token) + 1;
-        table[cnt].inPos = strtol(token, &ptr, 10);
-        token = strtok(NULL, delim);
-        headerSize += strlen(token) + 1;
-        table[cnt].inSize = strtol(token, &ptr, 10);
+        (*cLengths)[i] = (size_t)strtol(token, &ptr, 10);
     }
-    return table;
+}
+
+void fileReadToBitVector(sd_vector<>& cSparse, const char* fname, size_t offset){
+    ifstream in(fname, ifstream::binary);
+    if( !in ) { // file couldn't be opened
+        printf("Error: file could not be opened\n");
+        exit(1);
+    }
+    in.seekg(offset);
+    cSparse.load(in);
+    in.close();
 }
  
 static void decompress(const char* fname, const char* oname, const ZSTD_DDict* ddict)
 {
     size_t cSize;
     void* const cBuff = mallocAndLoadFile_orDie(fname, &cSize);
-    
-    struct entry* table = readHeader(cBuff, cSize);
 
-    /* Read the content size from the frame header. For simplicity we require
-     * that it is always present. By default, zstd will write the content size
-     * in the header when it is known. If you can't guarantee that the frame
-     * content size is always written into the header, either use streaming
-     * decompression, or ZSTD_decompressBound().
-     */
- 
+    // cLengths stores the sizes of the compressed blocks
+    size_t* cLengths;
+    readHeader(&cLengths, cBuff, cSize);
+    int offset = headerSize;
+    const size_t denseSize = numOfChunks * threshold;
+    
     /* Check that the dictionary ID matches.
      * If a non-zstd dictionary is used, then both will be zero.
      * By default zstd always writes the dictionary ID into the frame.
      * Zstd will check if there is a dictionary ID mismatch as well.
      */
     unsigned const expectedDictID = ZSTD_getDictID_fromDDict(ddict);
-    unsigned const actualDictID = ZSTD_getDictID_fromFrame((unsigned char*)cBuff + headerSize, cSize);
+    unsigned const actualDictID = ZSTD_getDictID_fromFrame((unsigned char*)cBuff + offset, cSize);
     CHECK(actualDictID == expectedDictID,
           "DictID mismatch: expected %u got %u",
           expectedDictID,
           actualDictID); 
- 
-    /* Decompress using the dictionary.
-     * If you need to control the decompression parameters, then use the
-     * advanced API: ZSTD_DCtx_setParameter(), ZSTD_DCtx_refDDict(), and
-     * ZSTD_decompressDCtx().
-     */
+          
     ZSTD_DCtx* const dctx = ZSTD_createDCtx();
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
 
-    int offset = headerSize;
-    unsigned long long outSize = 0; 
-    table[numOfChunks] = (struct entry){cSize - offset, table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize, 0};
+    size_t outSize = 0; 
 
-    void* const out = malloc_orDie(4ll * (long long)cSize); // Assuming the max. compression ratio is 4
+    sd_vector<> cSparse;
+    fileReadToBitVector(cSparse, fname, offset + denseSize);
+    void* const out = malloc_orDie(numOfChunks * chunkSize);
 
-    for(int chunk = 0, pos = offset + table[0].cPos; chunk < numOfChunks; chunk++){
-        size_t chunkSize = table[chunk + 1].cPos - table[chunk].cPos;
-        unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, chunkSize);
+    for(int chunk = 0; chunk < numOfChunks; chunk++){
+        // Size of the compressed block (obtained from the header)
+        size_t cBlockSize = cLengths[chunk];
+        // To store together the dense and sparse blocks of the current chunk
+        void* const buff = malloc_orDie(cBlockSize);
+        if(cBlockSize <= threshold){
+            // Copy the dense stream 
+            memcpy(buff, (unsigned char*)cBuff + offset + chunk * threshold, cBlockSize);
+        }
+        else{
+            // Copy the dense stream 
+            memcpy(buff, (unsigned char*)cBuff + offset + chunk * threshold, threshold);
+            // Copy the sparse stream
+            copyToArray((unsigned char*)buff + threshold, cSparse, chunk * chunkSize, cBlockSize - threshold);
+        }
+
+        // Decompress the block
+        const size_t rSize = ZSTD_getFrameContentSize(buff, cBlockSize);
         CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
         CHECK(rSize != ZSTD_CONTENTSIZE_UNKNOWN, "%s: original size unknown!", fname);
-        void* const rBuff = malloc_orDie((size_t)rSize); // To store the decompressed data
-
-        size_t const dSize = ZSTD_decompress_usingDDict(dctx, rBuff, rSize, (unsigned char*)cBuff + pos, chunkSize, ddict);
+        void* const rBuff = malloc_orDie(rSize); // To store the decompressed data
+        size_t const dSize = ZSTD_decompress_usingDDict(dctx, rBuff, rSize, buff, cBlockSize, ddict);
         CHECK_ZSTD(dSize);
         /* When zstd knows the content size, it will error if it doesn't match. */
         CHECK(dSize == rSize, "Impossible because zstd will check this condition!");
 
         memcpy((unsigned char*)out + outSize, rBuff, rSize); // Copying rBuff to out
-        pos += chunkSize;
         outSize += rSize;
         free(rBuff);
+        free(buff);
     }
     
     saveFile_orDie(oname, out, outSize, "wb");
     ZSTD_freeDCtx(dctx);
     free(out);
     free(cBuff);
-    free(table);
+    free(cLengths);
     /* success */
     printf("%25s : %6u -> %25s : %7u \n", fname, (unsigned)cSize, oname, (unsigned)outSize);
 }
@@ -130,7 +138,7 @@ static char* createOutFilename_orDie(const char* filename)
     size_t const outL = inL;
     char* outSpace = (char*)malloc_orDie(sizeof(char) * outL);
     memset(outSpace, 0, sizeof(char) * outL);
-    for(int i = 0; i < inL - 4; i++) // remove the .zst part
+    for(int i = 0; i < (int)inL - 3; i++) // remove the .ds part
         outSpace[i] = filename[i];
     return outSpace;
 }

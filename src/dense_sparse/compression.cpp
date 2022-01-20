@@ -10,7 +10,7 @@ using namespace sdsl;
 using namespace std;
 
 const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
-const double eps = 0.1;
+const double eps = 0.01;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -148,7 +148,7 @@ static char* createOutFilename_orDie(const char* filename)
     char* outSpace = (char*)malloc_orDie(outL * sizeof(char));
     memset(outSpace, 0, sizeof(char) * outL);
     strcat(outSpace, filename);
-    strcat(outSpace, ".ds");
+    strcat(outSpace, "_ds.ds");
     return outSpace;
 }
  
