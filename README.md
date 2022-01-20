@@ -13,23 +13,24 @@ Compress and Decompress using ZSTD library
 
 `--maxdict` flag is to specify the max size of the dictionary to be 100KB.
 `-B` flag is to specify the chunk size of 10KB.
+
 **Note:** You can either train the dictionary on a large number of small files, or you can divide a large file into small chunks.
 * For more info, check https://manpages.debian.org/testing/zstd/zstd.1.en.html
 
-#### Create dictionaries of multiple sizes from the same dataset
-* Navigate to the `benchmark/` directory and add execute permissions to the `createDict.sh` script using-
+#### Create dictionaries of multiple sizes from the same dataset (for benchmarking)
+* Navigate to the `benchmark` directory and add execute permissions to the `createDict.sh` script using-
 ``` $ chmod +x createDict.sh ```
 
 * Run the script using -
     ``` $ ./createDict.sh ```
 
 ### Compiling
-* To compile dictionary_compression, run
+* To compile dictionary_compression_chunks.cpp, run
     ```$ g++ -Wall -I/usr/local/include/ -c dictionary_compression_chunks.cpp -lm```
 * For linking, use
     ```$ g++ -L/usr/local/lib/ dictionary_compression_chunks.o -o dict_compressor_chunks -lzstd```
-* This will create an executable file called dict_compressor. To run this, use
-    ```$ ./dict_compressor_chunks raw_filename dict.zdict```
+* This will create an executable file called dict_compressor_chunks. To run this, use
+    ```$ ./dict_compressor_chunks [data file path] [dictionary path]```
 
 ### Results
 
@@ -84,11 +85,15 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 * For linking, use
     ```$ g++ -L/usr/local/lib/ compression.o -o compressor -lzstd -lsdsl```
 * This will create an executable file called compressor. To run this, use
-    ```$ ./compressor [file path] [dictionary path]```
+    ```$ ./compressor [data file path] [dictionary path]```
 
 ### Results
-* For the same 100MB text file, the compressed file size is 39.15MB.
-
+* For the same 100MB text file, using epsilon value of 0.01, the compressed file size obtained is 38MB.
 
 ### Links
-For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
+* For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
+* For more info on ZSTD, check https://facebook.github.io/zstd/
+* Getting started with ZSTD: https://zstd.docsforge.com/dev/getting-started/
+* SDSL tutorial: http://simongog.github.io/assets/data/sdsl-slides/tutorial#1
+* SDSL cheat sheet: http://simongog.github.io/assets/data/sdsl-cheatsheet.pdf
+
