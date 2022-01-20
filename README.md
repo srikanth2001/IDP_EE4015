@@ -70,6 +70,7 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 
 ### Installation of SDSL
 * To install SDSL, check https://github.com/simongog/sdsl-lite#installation
+* Use `/usr/local/` as the installation path.
 
 ### Compiling
 * Navigate to the `dense_sparse` directory.
@@ -78,7 +79,7 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 * For linking, use
     ```$ g++ -L/usr/local/lib/ compression.o -o compressor -lzstd -lsdsl```
 * This will create an executable file called compressor. To run this, use
-    ```$ ./compressor raw_filename dict.zdict```
+    ```$ ./compressor [file path] [dictionary path]```
 
 ### Results
 * For the same 100MB text file, the compressed file size is 39.15MB.
