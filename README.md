@@ -1,6 +1,11 @@
 # IDP_EE4015
 
 ## Basic LZ compression
+Compress and Decompress using ZSTD library
+
+### Installation of ZSTD
+* To install ZSTD and additional header files, check https://www.iith.ac.in/~shashankvatedka/html/miscellaneous/zstd_tutorial.html
+
 ### Create a dictionary
 * Navigate to the folder containing your text files.
 * Execute the following command.
@@ -18,7 +23,7 @@
 * Run the script using -
     ``` $ ./createDict.sh ```
 
-## Compiling
+### Compiling
 * To compile dictionary_compression, run
     ```$ g++ -Wall -I/usr/local/include/ -c dictionary_compression_chunks.cpp -lm```
 * For linking, use
