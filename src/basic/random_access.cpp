@@ -44,7 +44,7 @@ struct entry* readHeader(void* const cBuff, size_t cSize){
     char* ptr;
     numOfChunks = strtol(token, &ptr, 10);
 
-    struct entry* table = malloc_orDie(sizeof(struct entry) * (numOfChunks + 1));
+    struct entry* table = (struct entry*)malloc_orDie(sizeof(struct entry) * (numOfChunks + 1));
 
     for(int cnt = 0; cnt < numOfChunks; cnt++){
         token = strtok(NULL, delim);

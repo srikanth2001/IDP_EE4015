@@ -252,7 +252,7 @@ void* constructArrayFromBitVector(sd_vector<>& sdb){
     void* data = malloc_orDie(dataSize);
     for(int i = 0; i < (int)dataSize; i++){
         unsigned char currByte = 0;
-        for(int pos = 0; pos < 8 && (size_t)(8 * i + pos) < sdb.size(); pos++){
+        for(int pos = 0; pos < 8; pos++){
             currByte |= (unsigned char)(sdb[8 * i + pos] * (1 << (7 - pos)));
         }
         *((unsigned char*)data + i) = currByte;
@@ -267,6 +267,18 @@ void copyToBitVector(bit_vector& b, unsigned char* data, size_t bOffset, size_t 
         for(int pos = 0; pos < 8; pos++){
             b[8 * (i + bOffset) + pos] = (bool)((currByte >> (7 - pos)) & 1);
         }
+    }
+}
+
+// Copy contents from a bit_vector to an array
+void copyToArray(unsigned char* data, sd_vector<>& sdb, size_t bOffset, size_t size){
+    printf("1");
+    for(int i = 0; i < (int)size; i++){
+        unsigned char currByte = 0;
+        for(int pos = 0; pos < 8; pos++){
+            currByte |= (unsigned char)(sdb[8 * (i + bOffset) + pos] * (1 << (7 - pos)));
+        }
+        *(data + i) = currByte;
     }
 }
  

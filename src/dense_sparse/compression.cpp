@@ -149,7 +149,7 @@ static char* createOutFilename_orDie(const char* filename)
     char* outSpace = (char*)malloc_orDie(outL * sizeof(char));
     memset(outSpace, 0, sizeof(char) * outL);
     strcat(outSpace, filename);
-    strcat(outSpace, ".ds");
+    strcat(outSpace, "_ds.ds");
     return outSpace;
 }
  

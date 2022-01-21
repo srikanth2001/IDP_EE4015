@@ -1,6 +1,11 @@
 # IDP_EE4015
 
 ## Basic LZ compression
+Compress and Decompress using ZSTD library
+
+### Installation of ZSTD
+* To install ZSTD and additional header files, check https://www.iith.ac.in/~shashankvatedka/html/miscellaneous/zstd_tutorial.html
+
 ### Create a dictionary
 * Navigate to the folder containing your text files.
 * Execute the following command.
@@ -8,23 +13,24 @@
 
 `--maxdict` flag is to specify the max size of the dictionary to be 100KB.
 `-B` flag is to specify the chunk size of 10KB.
+
 **Note:** You can either train the dictionary on a large number of small files, or you can divide a large file into small chunks.
 * For more info, check https://manpages.debian.org/testing/zstd/zstd.1.en.html
 
-#### Create dictionaries of multiple sizes from the same dataset
-* Navigate to the `benchmark/` directory and add execute permissions to the `createDict.sh` script using-
+#### Create dictionaries of multiple sizes from the same dataset (for benchmarking)
+* Navigate to the `benchmark` directory and add execute permissions to the `createDict.sh` script using-
 ``` $ chmod +x createDict.sh ```
 
 * Run the script using -
     ``` $ ./createDict.sh ```
 
-## Compiling
-* To compile dictionary_compression, run
+### Compiling
+* To compile dictionary_compression_chunks.cpp, run
     ```$ g++ -Wall -I/usr/local/include/ -c dictionary_compression_chunks.cpp -lm```
 * For linking, use
     ```$ g++ -L/usr/local/lib/ dictionary_compression_chunks.o -o dict_compressor_chunks -lzstd```
-* This will create an executable file called dict_compressor. To run this, use
-    ```$ ./dict_compressor_chunks raw_filename dict.zdict```
+* This will create an executable file called dict_compressor_chunks. To run this, use
+    ```$ ./dict_compressor_chunks [data file path] [dictionary path]```
 
 ### Results
 
@@ -33,7 +39,7 @@ S. no. | Type of Compression  | Compressed size (in Bytes) | Compression ratio
 | ------------- | ------------- | ------------- | ------------- |
 | 1 | Simple Compression | 40,667,764 | 2.459 |
 | 2 | Dictionary Compression | 35,631,311 | 2.806 |
-| 3 | Dictionay Compression using chunks | 35,598,780 | 2.809 |
+| 3 | Dictionary Compression using chunks | 35,598,780 | 2.809 |
 
 #### Varying chunk size
 The below data was obtained using dictionary compression by varying the chunk size from 500KB to 5MB.
@@ -70,6 +76,7 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 
 ### Installation of SDSL
 * To install SDSL, check https://github.com/simongog/sdsl-lite#installation
+* Use `/usr/local/` as the installation path.
 
 ### Compiling
 * Navigate to the `dense_sparse` directory.
@@ -78,11 +85,16 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 * For linking, use
     ```$ g++ -L/usr/local/lib/ compression.o -o compressor -lzstd -lsdsl```
 * This will create an executable file called compressor. To run this, use
-    ```$ ./compressor raw_filename dict.zdict```
+    ```$ ./compressor [data file path] [dictionary path]```
 
 ### Results
-* For the same 100MB text file, the compressed file size is 39.15MB.
-
+* For the same 100MB text file, using epsilon value of 0.01, the compressed file size obtained is 38MB.
 
 ### Links
-For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
+* For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
+* For more info on ZSTD, check https://facebook.github.io/zstd/
+* Getting started with ZSTD: https://zstd.docsforge.com/dev/getting-started/
+* SDSL source code: https://github.com/simongog/sdsl-lite
+* SDSL tutorial: http://simongog.github.io/assets/data/sdsl-slides/tutorial
+* SDSL cheat sheet: http://simongog.github.io/assets/data/sdsl-cheatsheet.pdf
+
