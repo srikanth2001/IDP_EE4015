@@ -39,7 +39,7 @@ S. no. | Type of Compression  | Compressed size (in Bytes) | Compression ratio
 | ------------- | ------------- | ------------- | ------------- |
 | 1 | Simple Compression | 40,667,764 | 2.459 |
 | 2 | Dictionary Compression | 35,631,311 | 2.806 |
-| 3 | Dictionay Compression using chunks | 35,598,780 | 2.809 |
+| 3 | Dictionary Compression using chunks | 35,598,780 | 2.809 |
 
 #### Varying chunk size
 The below data was obtained using dictionary compression by varying the chunk size from 500KB to 5MB.
@@ -94,6 +94,7 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 * For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
 * For more info on ZSTD, check https://facebook.github.io/zstd/
 * Getting started with ZSTD: https://zstd.docsforge.com/dev/getting-started/
-* SDSL tutorial: http://simongog.github.io/assets/data/sdsl-slides/tutorial#1
+* SDSL source code: https://github.com/simongog/sdsl-lite
+* SDSL tutorial: http://simongog.github.io/assets/data/sdsl-slides/tutorial
 * SDSL cheat sheet: http://simongog.github.io/assets/data/sdsl-cheatsheet.pdf
 
