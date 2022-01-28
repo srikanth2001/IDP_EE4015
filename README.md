@@ -56,6 +56,22 @@ S. no. | Chunk size (in Bytes)  | Compressed size (in Bytes) | Average compressi
 | 9 |  4769792 | 35648633 | 0.676 |
 | 10 | 5242880 | 35631259 | 0.671 |
 
+#### Decompression by Varying chunk size
+
+|S.no|chunk size(in Bytes) |Avg. random access time for a chunk| Total time for decompression | 
+| ------------- | ------------- | ------------- | ------------- |
+|1| 512000  |0.000592  |0.143845 |
+|2| 985088  | 0.001277 |0.161015 |
+|3|1458176 | 0.002330 |0.197708 |
+|4|1931264 | 0.002920 |0.188245 |
+|5|2404352 |0.003128  | 0.163858|
+|6| 2877440| 0.003995 | 0.175650|
+|7| 3350528| 0.004625 |0.173954 |
+|8|3823616 | 0.005795 |0.195257 |
+|9|4296704 | 0.005416 | 0.164697|
+|10|4769792 | 0.006238 | 0.168325|
+|11|5242880 | 0.007445 | 0.191265|
+
 #### Varying dictionary size
 The below data was obtained using dictionary compression by varying the dictionary size from 10KB to 1MB.
 S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average compression time (in sec)
@@ -72,7 +88,21 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 | 10 | 1048570 | 35491525 | 0.665 |
 
 ## Dense Sparse stream-based compression
-* Use the same dictionaries as in LZ compression
+Use the same dictionaries as in LZ compression
+####  For varying chunk sizes
+|S.no|For chunk size |Total compression time|Avg. random access time for a chuks|Total time for decompression|
+| ------------- | ------------- | ------------- | ------------- |-----------|
+|1|512000   |1.231856 |0.074575 | 14.649192|
+|2| 985088  |1.186481 | 0.170812|17.451581 |
+|3|1458176 |1.055007 | 0.191714|13.255744 |
+|4|1931264 | 1.003361| 0.315643|16.441150 |
+|5| 2404352|0.976903 | 0.232022| 9.773472  |
+|6| 2877440| 0.958847| 0.360875| 12.660413|
+|7|3350528 |0.921761 | 0.458750|13.796304 |
+|8|3823616 |1.270537 | 0.562437| 15.226845|
+|9| 4296704|1.202339 | 0.778728|18.732006 |
+|10|4769792 | 0.947722| 0.434883| 9.166946  |
+|11|5242880 | 0.896644| 0.516508|10.365360 |
 
 ### Installation of SDSL
 * To install SDSL, check https://github.com/simongog/sdsl-lite#installation
