@@ -272,7 +272,6 @@ void copyToBitVector(bit_vector& b, unsigned char* data, size_t bOffset, size_t 
 
 // Copy contents from a bit_vector to an array
 void copyToArray(unsigned char* data, sd_vector<>& sdb, size_t bOffset, size_t size){
-    printf("1");
     for(int i = 0; i < (int)size; i++){
         unsigned char currByte = 0;
         for(int pos = 0; pos < 8; pos++){

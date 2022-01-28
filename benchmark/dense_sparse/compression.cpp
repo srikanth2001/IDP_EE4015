@@ -1,24 +1,26 @@
 #include <stdio.h>     // printf
 #include <stdlib.h>    // free
-#include <string.h>    // memset, strcat
+#include <string.h>    // memset, strcat, strtol
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
 #include <fstream>
 #include <iostream>
+#include <time.h>
 #include <sdsl/bit_vectors.hpp>
-#include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../../src/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 using namespace sdsl;
 using namespace std;
 
-const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
+static int chunkSize; // Size of each chunk = 5 MB 
 const double eps = 0.01;
+static double sumTotalTime = 0, totalTime = 0;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
 static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
 {
     size_t dictSize;
-    printf("loading dictionary %s \n", dictFileName);
+    // printf("loading dictionary %s \n", dictFileName);
     void* const dictBuffer = mallocAndLoadFile_orDie(dictFileName, &dictSize);
     ZSTD_CDict* const cdict = ZSTD_createCDict(dictBuffer, dictSize, cLevel);
     CHECK(cdict != NULL, "ZSTD_createCDict() failed!");
@@ -66,12 +68,12 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 {
     size_t fSize;
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
-    int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
+    int numOfChunks = (fSize + chunkSize - 1) /  chunkSize; // ceil(fSize / chunkSize)
 
     void* const header = malloc_orDie(50 * (numOfChunks + 1)); // Increase the header capacity for larger files
 
     // Compressing the file to compute entropy of the file X
-    printf("Computing entropy of the file.........\n");
+    // printf("Computing entropy of the file.........\n");
     size_t cBuffSize = ZSTD_compressBound(fSize);
     void* cBuff = malloc_orDie(cBuffSize);
     ZSTD_CCtx* cctx = ZSTD_createCCtx();
@@ -81,24 +83,27 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     free(cBuff);
 
     const double H_X = (double)cSize / fSize;
-    printf("Entropy of the file %s: %lf\n", fname, H_X);
+    // printf("Entropy of the file %s: %lf\n", fname, H_X);
 
     // Threshold length = b * H(X) * (1 + eps)
-    const size_t threshold = (size_t)(CHUNK_SIZE * (1 + eps) * H_X);
+    const size_t threshold = (size_t)(chunkSize * (1 + eps) * H_X);
 
     char hBuff[40];
-    sprintf(hBuff, "%d %ld %d ", numOfChunks, threshold, CHUNK_SIZE);
+    sprintf(hBuff, "%d %ld %d ", numOfChunks, threshold, chunkSize);
     memcpy((unsigned char*)header, hBuff, strlen(hBuff));
     int headerSize = strlen(hBuff);
     
-    size_t denseSize = numOfChunks * threshold, sparseSize = numOfChunks * CHUNK_SIZE;
+    size_t denseSize = numOfChunks * threshold, sparseSize = numOfChunks * chunkSize;
     void* const denseStream = malloc_orDie(denseSize);
     bit_vector sparseStream(8 * sparseSize, 0);
     memset((unsigned char*)denseStream, 0, sizeof(unsigned char) * denseSize);
     size_t denseOffset = 0, sparseOffset = 0;
 
-    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
-        size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
+    totalTime = 0;
+    clock_t begin = clock();
+
+    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
+        size_t realSize = (size_t)min(chunkSize, (int)fSize - offset);
         // printf("%ld ", realSize);
         cBuffSize = ZSTD_compressBound(realSize);
         cBuff = malloc_orDie(cBuffSize);
@@ -116,7 +121,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         }
 
         denseOffset += threshold;
-        sparseOffset += CHUNK_SIZE;
+        sparseOffset += chunkSize;
 
         sprintf(hBuff, "%ld ", cSize); // Store the compressed size for each chunk in the header.
         memcpy((unsigned char*)header + headerSize, hBuff, strlen(hBuff));
@@ -125,9 +130,12 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         free(cBuff);
     }
 
-    printf("Compressing the sparse stream using bit-vector-compressor........\n");
+    // printf("Compressing the sparse stream using bit-vector-compressor........\n");
 
     sd_vector<> cSparse(sparseStream);
+    clock_t end = clock();
+    totalTime = (double)(end - begin) / CLOCKS_PER_SEC;
+    sumTotalTime += totalTime;
 
     // Write contents to file
     filePutContents(oname, header, headerSize);
@@ -138,7 +146,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     free(denseStream);
     free(header);
     /* success */
-    printf("%25s : %6ld -> %7ld - %s \n", fname, fSize, headerSize + denseSize + size_in_bytes(cSparse), oname);
+    // printf("%25s : %6ld -> %7ld - %s \n", fname, fSize, headerSize + denseSize + size_in_bytes(cSparse), oname);
 }
  
  
@@ -158,7 +166,7 @@ int main(int argc, const char** argv)
     const char* const exeName = argv[0];
     int const cLevel = 3;
  
-    if (argc<3) {
+    if (argc<4) {
         fprintf(stderr, "wrong arguments\n");
         fprintf(stderr, "usage:\n");
         fprintf(stderr, "%s [FILES] dictionary\n", exeName);
@@ -166,19 +174,25 @@ int main(int argc, const char** argv)
     }
  
     /* load dictionary only once */
-    const char* const dictName = argv[argc-1];
+    const char* const dictName = argv[argc-2];
+    char* ptr;
+    chunkSize = (size_t)strtol(argv[argc-1], &ptr, 10);
     ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
- 
+    
+    const int noi = 5;
     int u;
-    for (u=1; u<argc-1; u++) {
-        const char* inFilename = argv[u];
-        char* const outFilename = createOutFilename_orDie(inFilename);
-        // printf("%s", outFilename);
-        compress(inFilename, outFilename, dictPtr);
-        free(outFilename);
+    for(int iter = 0; iter < noi; iter++){
+        for (u=1; u<argc-2; u++) {
+            const char* inFilename = argv[u];
+            char* const outFilename = createOutFilename_orDie(inFilename);
+            // printf("%s", outFilename);
+            compress(inFilename, outFilename, dictPtr);
+            free(outFilename);
+        }
     }
+    printf("Total compression time: %lf s\n", sumTotalTime / noi);
  
     ZSTD_freeCDict(dictPtr);
-    printf("All %u files compressed. \n", argc-2);
+
     return 0;
 }

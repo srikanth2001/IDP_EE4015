@@ -86,8 +86,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
     free(fBuff);
     
-    // saveFile_orDie(oname, header, headerSize, "wb");
-    // saveFile_orDie(oname, out, outSize, "ab");
+    saveFile_orDie(oname, header, headerSize, "wb");
+    saveFile_orDie(oname, out, outSize, "ab");
     free(out);
     free(header);
     /* success */
@@ -120,16 +120,16 @@ int main(int argc, const char** argv)
     }
  
     /* load dictionary only once */
-    const char* const dictName = argv[argc-2];
+    const char* const dictName = argv[argc - 2];
     char* ptr;
     chunkSize = (size_t)strtol(argv[argc - 1], &ptr, 10);
     ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
 
     // The below code is for compressing using the chunk size specified in argv
-    for (int u=1; u<argc-1; u++) {
+    for (int u=1; u<argc-2; u++) {
         const char* inFilename = argv[u];
         char* const outFilename = createOutFilename_orDie(inFilename);
-        compress(inFilename, outFilename, dictPtr);        
+        compress(inFilename, outFilename, dictPtr);       
         free(outFilename);
     }
 
