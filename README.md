@@ -90,7 +90,7 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 ### Results
 * For the same 100MB text file, using epsilon value of 0.01, the compressed file size obtained is 38MB.
 
-### Links
+## Links
 * For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
 * For more info on ZSTD, check https://facebook.github.io/zstd/
 * Getting started with ZSTD: https://zstd.docsforge.com/dev/getting-started/

@@ -9,20 +9,20 @@
  */
 #include <stdio.h>     // printf
 #include <stdlib.h>    // free
-#include <string.h>    // memset, strcat
+#include <string.h>    // memset, strcat, strtol
 #include <zstd.h>      // presumes zstd library is installed
 #include <time.h>      // clock
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-static int CHUNK_SIZE = 5 * (1 << 20); 
-static double sumOfTimes;
+static size_t chunkSize; 
+static double sumOfTimes = 0;
 static size_t compressedSize, dictSize;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
 static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
 {
-    printf("loading dictionary %s \n", dictFileName);
+    // printf("loading dictionary %s \n", dictFileName);
     void* const dictBuffer = mallocAndLoadFile_orDie(dictFileName, &dictSize);
     ZSTD_CDict* const cdict = ZSTD_createCDict(dictBuffer, dictSize, cLevel);
     CHECK(cdict != NULL, "ZSTD_createCDict() failed!");
@@ -38,7 +38,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 {
     size_t fSize, outSize = 0;
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
-    int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
+    int numOfChunks = (fSize + chunkSize - 1) /  chunkSize; // ceil(fSize / chunkSize)
     void* const out = malloc_orDie(fSize);
     void* const header = malloc_orDie(50 * (numOfChunks + 1)); // For indexes < 10^10
 
@@ -49,9 +49,10 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
     clock_t begin = clock();
 
-    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
-        size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
+    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
+        size_t realSize = (size_t)min(chunkSize, (int)fSize - offset);
         // printf("%ld ", realSize);
+        
         size_t const cBuffSize = ZSTD_compressBound(realSize);
         void* const cBuff = malloc_orDie(cBuffSize);
     
@@ -100,8 +101,8 @@ static char* createOutFilename_orDie(const char* filename)
     size_t const outL = inL + 30;
     void* outSpace = malloc_orDie(outL);
     memset(outSpace, 0, outL);
-    strcat(outSpace, filename);
-    strcat(outSpace, "_dict_chunks.zst");
+    strcat((char*)outSpace, filename);
+    strcat((char*)outSpace, "_dict_chunks.zst");
     return (char*)outSpace;
 }
  
@@ -111,28 +112,37 @@ int main(int argc, const char** argv)
     int const cLevel = 3;
     
     // Comment this check condition if you are running the benchmarking for multiple dictionaries
-    // if (argc<3) {
-    //     fprintf(stderr, "wrong arguments\n");
-    //     fprintf(stderr, "usage:\n");
-    //     fprintf(stderr, "%s [FILES] dictionary\n", exeName);
-    //     return 1;
-    // }
+    if (argc<4) {
+        fprintf(stderr, "wrong arguments\n");
+        fprintf(stderr, "usage:\n");
+        fprintf(stderr, "%s [FILES] dictionary\n", exeName);
+        return 1;
+    }
  
     /* load dictionary only once */
-    // const char* const dictName = argv[argc-1];
-    // ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
- 
-    int u;
+    const char* const dictName = argv[argc-2];
+    char* ptr;
+    chunkSize = (size_t)strtol(argv[argc - 1], &ptr, 10);
+    ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
+
+    // The below code is for compressing using the chunk size specified in argv
+    for (int u=1; u<argc-1; u++) {
+        const char* inFilename = argv[u];
+        char* const outFilename = createOutFilename_orDie(inFilename);
+        compress(inFilename, outFilename, dictPtr);        
+        free(outFilename);
+    }
+
     // The below code is for compressing using different chunk sizes
-    // for (u=1; u<argc-1; u++) {
+    // for (int u=1; u<argc-1; u++) {
     //     const char* inFilename = argv[u];
     //     char* const outFilename = createOutFilename_orDie(inFilename);
 
     //     const int minSize = 50 * (1 << 10), maxSize = 5 * (1 << 20);
     //     const int dc = (maxSize - minSize) / 10;
     //     const int noi = 10;
-    //     for(CHUNK_SIZE = minSize; CHUNK_SIZE <= minSize; CHUNK_SIZE += dc){
-    //         printf("For chunk size = : %ld B\n", CHUNK_SIZE);
+    //     for(chunkSize = minSize; chunkSize <= minSize; chunkSize += dc){
+    //         printf("For chunk size = : %ld B\n", chunkSize);
     //         sumOfTimes = 0.0;
     //         for(int iter = 0; iter < noi; iter++){
     //             compress(inFilename, outFilename, dictPtr);
@@ -145,31 +155,30 @@ int main(int argc, const char** argv)
     // }
 
     // The below code is for compressing using different dictionaries
-    for (u=1; u<argc; u++) {
-        char* dictArray[] = {"../data/dict_1.zdict", "../data/dict_2.zdict", "../data/dict_3.zdict", "../data/dict_4.zdict",
-                            "../data/dict_5.zdict", "../data/dict_6.zdict", "../data/dict_7.zdict", "../data/dict_8.zdict",
-                            "../data/dict_9.zdict", "../data/dict_10.zdict", "../data/dict_11.zdict"};
+    // for (u=1; u<argc; u++) {
+    //     char* dictArray[] = {"../data/dict_1.zdict", "../data/dict_2.zdict", "../data/dict_3.zdict", "../data/dict_4.zdict",
+    //                         "../data/dict_5.zdict", "../data/dict_6.zdict", "../data/dict_7.zdict", "../data/dict_8.zdict",
+    //                         "../data/dict_9.zdict", "../data/dict_10.zdict", "../data/dict_11.zdict"};
 
-        for(int d = 0; d < 11; d++){ 
-            char* dictName = dictArray[d];                   
-            ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
-            const char* inFilename = argv[u];
-            char* const outFilename = createOutFilename_orDie(inFilename);
+    //     for(int d = 0; d < 11; d++){ 
+    //         char* dictName = dictArray[d];                   
+    //         ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
+    //         const char* inFilename = argv[u];
+    //         char* const outFilename = createOutFilename_orDie(inFilename);
 
-            const int noi = 10;
-            printf("For dictionary size = : %ld B\n", dictSize);
-            sumOfTimes = 0.0;
-            for(int iter = 0; iter < noi; iter++){
-                compress(inFilename, outFilename, dictPtr);
-            }
-            printf("Compressed file size: %ld B\n", compressedSize);
-            printf("Average runtime: %lf s\n\n", sumOfTimes / noi);
+    //         const int noi = 10;
+    //         printf("For dictionary size = : %ld B\n", dictSize);
+    //         sumOfTimes = 0.0;
+    //         for(int iter = 0; iter < noi; iter++){
+    //             compress(inFilename, outFilename, dictPtr);
+    //         }
+    //         printf("Compressed file size: %ld B\n", compressedSize);
+    //         printf("Average runtime: %lf s\n\n", sumOfTimes / noi);
             
-            free(outFilename);
-            ZSTD_freeCDict(dictPtr);
-        }
-    }
+    //         free(outFilename);
+    //         ZSTD_freeCDict(dictPtr);
+    //     }
+    // }
 
-    printf("All %u files compressed. \n", argc-2);
     return 0;
 }
