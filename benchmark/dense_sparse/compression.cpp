@@ -182,7 +182,7 @@ int main(int argc, const char** argv)
     chunkSize = (size_t)strtol(argv[argc-1], &ptr, 10);
     ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
     
-    const int noi = 10;
+    const int noi = 5;
     int u;
     for(int iter = 0; iter < noi; iter++){
         for (u=1; u<argc-2; u++) {
