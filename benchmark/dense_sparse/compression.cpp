@@ -137,7 +137,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     clock_t end = clock();
     totalTime = (double)(end - begin) / CLOCKS_PER_SEC;
     sumTotalTime += totalTime;
-    compressedSize = (denseSize + size_in_bytes(cSparse);
+    compressedSize = (denseSize + size_in_bytes(cSparse));
     compressionRatio = fSize / (double)compressedSize;
     
     // Write contents to file

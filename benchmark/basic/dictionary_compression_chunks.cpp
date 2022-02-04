@@ -83,7 +83,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     sumOfTimes += time_spent;
     compressedSize = outSize;
-    compressionRatio = fSize / (double)outSize;
+    compressionRatio = fSize / (double)compressedSize;
 
     free(fBuff);
     

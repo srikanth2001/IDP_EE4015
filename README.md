@@ -125,6 +125,8 @@ For the `enwik8` text file,
 |11|5242880 | 0.896644| 0.516508|10.365360 |
 
 For the `enwik9` text file,
+#### Varying chunk size
+The below data was obtained using dictionary compression by varying the chunk size from 500KB to 50MB.
 
 ## Links
 * Text files: https://deepai.org/dataset/enwik8, https://archive.org/details/enwik9
