@@ -164,7 +164,7 @@ int main(int argc, const char** argv)
     const char* const dictName = argv[argc-1];
     ZSTD_DDict* const dictPtr = createDict_orDie(dictName);
  
-    const int noi = 5;
+    const int noi = 10;
     
     for(int iter = 0; iter < noi; iter++){
         for (int u=1; u<argc-1; u++){

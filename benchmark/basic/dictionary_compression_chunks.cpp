@@ -15,7 +15,7 @@
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 static size_t chunkSize; 
-static double sumOfTimes = 0;
+static double sumOfTimes = 0, compressionRatio;
 static size_t compressedSize, dictSize;
  
 /* createDict() :
@@ -83,6 +83,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     sumOfTimes += time_spent;
     compressedSize = outSize;
+    compressionRatio = fSize / (double)outSize;
 
     free(fBuff);
     
@@ -122,16 +123,24 @@ int main(int argc, const char** argv)
     /* load dictionary only once */
     const char* const dictName = argv[argc - 2];
     char* ptr;
+    // The below code is for compressing using the chunk size specified in argv
     chunkSize = (size_t)strtol(argv[argc - 1], &ptr, 10);
     ZSTD_CDict* const dictPtr = createCDict_orDie(dictName, cLevel);
 
-    // The below code is for compressing using the chunk size specified in argv
-    for (int u=1; u<argc-2; u++) {
-        const char* inFilename = argv[u];
-        char* const outFilename = createOutFilename_orDie(inFilename);
-        compress(inFilename, outFilename, dictPtr);       
-        free(outFilename);
+    const int noi = 10;
+    
+    for(int iter = 0; iter < noi; iter++){
+        for (int u=1; u<argc-2; u++) {
+            const char* inFilename = argv[u];
+            char* const outFilename = createOutFilename_orDie(inFilename);
+            compress(inFilename, outFilename, dictPtr);       
+            free(outFilename);
+        }
     }
+    printf("Compressed file size: %ld B\n", compressedSize);
+    printf("Compression ratio: %lf\n", compressionRatio);
+    printf("Avg. compression time: %lf s\n", sumOfTimes / noi);
+ 
 
     // The below code is for compressing using different chunk sizes
     // for (int u=1; u<argc-1; u++) {

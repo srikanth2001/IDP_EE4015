@@ -173,7 +173,7 @@ int main(int argc, const char** argv)
     const char* const dictName = argv[argc-1];
     ZSTD_DDict* const dictPtr = createDict_orDie(dictName);
     
-    const int noi = 5;
+    const int noi = 10;
     for(int iter = 0; iter < noi; iter++){
         int u;
         for (u=1; u<argc-1; u++){
@@ -185,7 +185,7 @@ int main(int argc, const char** argv)
         }
     }
     printf("Avg. random access time for a chunk: %lf s\n", sumRATime / noi);
-    printf("Total time for decompression: %lf s\n\n", sumTotalTime / noi);
+    printf("Avg. decompression time: %lf s\n\n", sumTotalTime / noi);
 
     ZSTD_freeDDict(dictPtr);
     // printf("All %u files correctly decoded\n", argc-2);

@@ -1,19 +1,24 @@
-minSize=512000 # 500KB
-maxSize=5242880 # 5MB
+filePath=$1
+dictPath=$2
+minSize=$3 
+maxSize=$4
 ds=`expr $maxSize - $minSize`
 ds=`expr $ds / 10`
 
-# while [[ $dictSize -le $maxSize ]]
+echo "Training dictionary...."
+zstd --train -B`expr $minSize / 10` --maxdict=`expr $maxSize / 50` -o $dictPath -r $filePath
+echo ""
+
 for (( chunkSize=$minSize; chunkSize<=$maxSize; chunkSize+=$ds ))
 do
     echo -e "For chunk size = $chunkSize B"
     # Compressing
     g++ -Wall -w -I/usr/local/include/ -c dictionary_compression_chunks.cpp -lm
     g++ -L/usr/local/lib/ dictionary_compression_chunks.o -o dict_compressor_chunks -lzstd
-    ./dict_compressor_chunks ../../data/enwik8 ../../data/dict.zdict $chunkSize
+    ./dict_compressor_chunks $filePath $dictPath $chunkSize
 
     # # Decompressing
     g++ -Wall -w -I/usr/local/include/ -c dictionary_decompression_chunks.cpp -lm
     g++ -L/usr/local/lib/ dictionary_decompression_chunks.o -o dict_decompressor_chunks -lzstd
-    ./dict_decompressor_chunks ../../data/enwik8_dict_chunks.zst ../../data/dict.zdict
+    ./dict_decompressor_chunks "$filePath"_dict_chunks.zst  $dictPath
 done

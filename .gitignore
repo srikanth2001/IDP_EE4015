@@ -2,3 +2,4 @@ data/*
 test.cpp
 test
 test.o
+test.sh

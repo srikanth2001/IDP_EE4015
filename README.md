@@ -34,8 +34,8 @@ Compress and Decompress using ZSTD library
 
 ### Results
 
-For a text file of size 100MB,
-S. no. | Type of Compression  | Compressed size (in Bytes) | Compression ratio
+For the text file `enwik8` of size 100MB,
+S. no. | Type of Compression  | Compressed size (in B) | Compression ratio
 | ------------- | ------------- | ------------- | ------------- |
 | 1 | Simple Compression | 40,667,764 | 2.459 |
 | 2 | Dictionary Compression | 35,631,311 | 2.806 |
@@ -43,7 +43,7 @@ S. no. | Type of Compression  | Compressed size (in Bytes) | Compression ratio
 
 #### Varying chunk size
 The below data was obtained using dictionary compression by varying the chunk size from 500KB to 5MB.
-S. no. | Chunk size (in Bytes)  | Compressed size (in Bytes) | Average compression time (in sec)
+S. no. | Chunk size (in B)  | Compressed size (in B) | Average compression time (in s)
 | ------------- | ------------- | ------------- | ------------- |
 | 1 | 512000 | 36361961 | 0.714 |
 | 2 | 985088  | 35793266 | 0.783 |
@@ -58,7 +58,7 @@ S. no. | Chunk size (in Bytes)  | Compressed size (in Bytes) | Average compressi
 
 #### Decompression by Varying chunk size
 
-|S.no|chunk size(in Bytes) |Avg. random access time for a chunk| Total time for decompression | 
+|S. no|Chunk size(in B) |Avg. random access time for a chunk (in s)| Total time for decompression (in s)| 
 | ------------- | ------------- | ------------- | ------------- |
 |1| 512000  |0.000592  |0.143845 |
 |2| 985088  | 0.001277 |0.161015 |
@@ -74,7 +74,7 @@ S. no. | Chunk size (in Bytes)  | Compressed size (in Bytes) | Average compressi
 
 #### Varying dictionary size
 The below data was obtained using dictionary compression by varying the dictionary size from 10KB to 1MB.
-S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average compression time (in sec)
+S. no. | Dictionary size (in B)  | Compressed size (in B) | Average compression time (in s)
 | ------------- | ------------- | ------------- | ------------- |
 | 1 | 10240 | 35690263 | 0.777 |
 | 2 | 114073 | 35631514 | 0.672 |
@@ -87,22 +87,12 @@ S. no. | Dictionary size (in Bytes)  | Compressed size (in Bytes) | Average comp
 | 9 | 944737 | 35564179 | 0.675 |
 | 10 | 1048570 | 35491525 | 0.665 |
 
+For the `enwik9` text file,
+#### Varying chunk size
+The below data was obtained using dictionary compression by varying the chunk size from 500KB to 50MB.
+
 ## Dense Sparse stream-based compression
 Use the same dictionaries as in LZ compression
-####  For varying chunk sizes
-|S.no|For chunk size |Total compression time|Avg. random access time for a chuks|Total time for decompression|
-| ------------- | ------------- | ------------- | ------------- |-----------|
-|1|512000   |1.231856 |0.074575 | 14.649192|
-|2| 985088  |1.186481 | 0.170812|17.451581 |
-|3|1458176 |1.055007 | 0.191714|13.255744 |
-|4|1931264 | 1.003361| 0.315643|16.441150 |
-|5| 2404352|0.976903 | 0.232022| 9.773472  |
-|6| 2877440| 0.958847| 0.360875| 12.660413|
-|7|3350528 |0.921761 | 0.458750|13.796304 |
-|8|3823616 |1.270537 | 0.562437| 15.226845|
-|9| 4296704|1.202339 | 0.778728|18.732006 |
-|10|4769792 | 0.947722| 0.434883| 9.166946  |
-|11|5242880 | 0.896644| 0.516508|10.365360 |
 
 ### Installation of SDSL
 * To install SDSL, check https://github.com/simongog/sdsl-lite#installation
@@ -118,10 +108,26 @@ Use the same dictionaries as in LZ compression
     ```$ ./compressor [data file path] [dictionary path]```
 
 ### Results
-* For the same 100MB text file, using epsilon value of 0.01, the compressed file size obtained is 38MB.
+For the `enwik8` text file,
+####  For varying chunk sizes
+|S. no| Chunk size (in B) | Avg. compression time (in s) | Avg. random access time for a chunk (in s) | Avg. decompression time (in s)|
+| ------------- | ------------- | ------------- | ------------- |-----------|
+|1|512000   |1.231856 |0.074575 | 14.649192|
+|2| 985088  |1.186481 | 0.170812|17.451581 |
+|3|1458176 |1.055007 | 0.191714|13.255744 |
+|4|1931264 | 1.003361| 0.315643|16.441150 |
+|5| 2404352|0.976903 | 0.232022| 9.773472  |
+|6| 2877440| 0.958847| 0.360875| 12.660413|
+|7|3350528 |0.921761 | 0.458750|13.796304 |
+|8|3823616 |1.270537 | 0.562437| 15.226845|
+|9| 4296704|1.202339 | 0.778728|18.732006 |
+|10|4769792 | 0.947722| 0.434883| 9.166946  |
+|11|5242880 | 0.896644| 0.516508|10.365360 |
+
+For the `enwik9` text file,
 
 ## Links
-* For the text files that were used, check https://drive.google.com/folderview?id=14VN-RFaqX92H5ZyzqTGSkkkEucMDDmQ1
+* Text files: https://deepai.org/dataset/enwik8, https://archive.org/details/enwik9
 * For more info on ZSTD, check https://facebook.github.io/zstd/
 * Getting started with ZSTD: https://zstd.docsforge.com/dev/getting-started/
 * SDSL source code: https://github.com/simongog/sdsl-lite
