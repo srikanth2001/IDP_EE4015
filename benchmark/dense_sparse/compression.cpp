@@ -14,7 +14,7 @@ using namespace std;
 static int chunkSize; // Size of each chunk = 5 MB 
 const double eps = 0.01;
 static double sumTotalTime = 0, totalTime = 0, compressionRatio;
-static size_t compressedSize;
+static size_t compressedSize, denseSize, cSparseSize;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -94,7 +94,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     memcpy((unsigned char*)header, hBuff, strlen(hBuff));
     int headerSize = strlen(hBuff);
     
-    size_t denseSize = numOfChunks * threshold, sparseSize = numOfChunks * chunkSize;
+    denseSize = numOfChunks * threshold;
+    const size_t sparseSize = numOfChunks * chunkSize;
     void* const denseStream = malloc_orDie(denseSize);
     bit_vector sparseStream(8 * sparseSize, 0);
     memset((unsigned char*)denseStream, 0, sizeof(unsigned char) * denseSize);
@@ -137,7 +138,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     clock_t end = clock();
     totalTime = (double)(end - begin) / CLOCKS_PER_SEC;
     sumTotalTime += totalTime;
-    compressedSize = (denseSize + size_in_bytes(cSparse));
+    cSparseSize = size_in_bytes(cSparse);
+    compressedSize = (denseSize + cSparseSize);
     compressionRatio = fSize / (double)compressedSize;
     
     // Write contents to file
@@ -194,6 +196,7 @@ int main(int argc, const char** argv)
         }
     }
     printf("Compressed file size: %lf \nCompression ratio: %lf\n", compressedSize, compressionRatio);
+    printf("Dense stream size: %ld\nCompressed Sparse stream size: %ld\n", denseSize, cSparseSize);
     printf("Avg. compression time: %lf s\n", sumTotalTime / noi);
  
     ZSTD_freeCDict(dictPtr);
