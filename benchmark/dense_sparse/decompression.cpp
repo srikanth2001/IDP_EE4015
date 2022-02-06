@@ -10,7 +10,7 @@
 using namespace sdsl;
 using namespace std;
 
-static int numOfChunks, headerSize = 0;
+static size_t numOfChunks, headerSize = 0;
 static size_t threshold, chunkSize;
 static double sumRATime = 0, sumTotalTime = 0, randomAccessTime = 0, totalTime = 0;
  

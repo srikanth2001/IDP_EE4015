@@ -11,7 +11,7 @@
 using namespace sdsl;
 using namespace std;
 
-static int chunkSize; // Size of each chunk = 5 MB 
+static size_t chunkSize; 
 const double eps = 0.01;
 static double sumTotalTime = 0, totalTime = 0, compressionRatio;
 static size_t compressedSize, denseSize, cSparseSize;
@@ -139,7 +139,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     totalTime = (double)(end - begin) / CLOCKS_PER_SEC;
     sumTotalTime += totalTime;
     cSparseSize = size_in_bytes(cSparse);
-    compressedSize = (denseSize + cSparseSize);
+    compressedSize = denseSize + cSparseSize;
     compressionRatio = fSize / (double)compressedSize;
     
     // Write contents to file
@@ -195,7 +195,7 @@ int main(int argc, const char** argv)
             free(outFilename);
         }
     }
-    printf("Compressed file size: %lf \nCompression ratio: %lf\n", compressedSize, compressionRatio);
+    printf("Compressed file size: %ld \nCompression ratio: %lf\n", compressedSize, compressionRatio);
     printf("Dense stream size: %ld\nCompressed Sparse stream size: %ld\n", denseSize, cSparseSize);
     printf("Avg. compression time: %lf s\n", sumTotalTime / noi);
  
