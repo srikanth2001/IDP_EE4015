@@ -97,7 +97,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     unsigned long long outSize = 0; 
     table[numOfChunks] = (struct entry){cSize - offset, table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize, 0};
 
-    void* const out = malloc_orDie(4ll * (long long)cSize); // Assuming the max. compression ratio is 4
+    void* const out = malloc_orDie(table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize); // Assuming the max. compression ratio is 4
     
     randomAccessTime = 0, totalTime = 0;
     clock_t begin = clock();

@@ -154,7 +154,6 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     // printf("%25s : %6ld -> %7ld - %s \n", fname, fSize, headerSize + denseSize + size_in_bytes(cSparse), oname);
 }
  
- 
 static char* createOutFilename_orDie(const char* filename)
 {
     size_t const inL = strlen(filename);
