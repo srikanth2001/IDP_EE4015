@@ -93,7 +93,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     ZSTD_DCtx* const dctx = ZSTD_createDCtx();
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
 
-    printf("No. of chunks: %d\n", numOfChunks);
+    // printf("No. of chunks: %d\n", numOfChunks);
     size_t offset = headerSize;
     unsigned long long outSize = 0; 
     table[numOfChunks] = (struct entry){cSize - offset, table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize, 0};

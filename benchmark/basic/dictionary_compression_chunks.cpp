@@ -44,7 +44,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
     char buff[40];
     sprintf(buff, "%d ", numOfChunks);
-    printf("No. of chunks: %d\n", numOfChunks);
+    // printf("No. of chunks: %d\n", numOfChunks);
     memcpy((unsigned char*)header, buff, strlen(buff));
     size_t headerSize = strlen(buff);
 

@@ -60,8 +60,8 @@ static char* createOutFilename_orDie(const char* filename)
     size_t const outL = inL + 20;
     void* outSpace = malloc_orDie(outL);
     memset(outSpace, 0, outL);
-    strcat(outSpace, filename);
-    strcat(outSpace, "_dict.zst");
+    strcat((char*)outSpace, filename);
+    strcat((char*)outSpace, "_dict.zst");
     return (char*)outSpace;
 }
  
