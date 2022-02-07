@@ -16,11 +16,11 @@
 #include <time.h>      // clock
 #include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-static int numOfChunks = 0, headerSize = 0;
+static size_t numOfChunks = 0, headerSize = 0;
 static double sumRATime = 0, sumTotalTime = 0, randomAccessTime = 0, totalTime = 0;
 
 struct entry{
-    int cPos, inPos, inSize;
+    size_t cPos, inPos, inSize;
 };
  
 /* createDict() :
@@ -45,7 +45,7 @@ struct entry* readHeader(void* const cBuff, size_t cSize){
 
     struct entry* table = (struct entry*)malloc_orDie(sizeof(struct entry) * (numOfChunks + 1));
 
-    for(int cnt = 0; cnt < numOfChunks; cnt++){
+    for(size_t cnt = 0; cnt < numOfChunks; cnt++){
         token = strtok(NULL, delim);
         table[cnt].cPos = strtol(token, &ptr, 10);
         headerSize += strlen(token) + 1;
@@ -93,7 +93,8 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     ZSTD_DCtx* const dctx = ZSTD_createDCtx();
     CHECK(dctx != NULL, "ZSTD_createDCtx() failed!");
 
-    int offset = headerSize;
+    printf("No. of chunks: %d\n", numOfChunks);
+    size_t offset = headerSize;
     unsigned long long outSize = 0; 
     table[numOfChunks] = (struct entry){cSize - offset, table[numOfChunks - 1].inPos + table[numOfChunks - 1].inSize, 0};
 
@@ -102,7 +103,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     randomAccessTime = 0, totalTime = 0;
     clock_t begin = clock();
 
-    for(int chunk = 0, pos = offset + table[0].cPos; chunk < numOfChunks; chunk++){
+    for(size_t chunk = 0, pos = offset + table[0].cPos; chunk < numOfChunks; chunk++){
         size_t cBlockSize = table[chunk + 1].cPos - table[chunk].cPos;
         clock_t cBegin = clock();
         unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, cBlockSize);

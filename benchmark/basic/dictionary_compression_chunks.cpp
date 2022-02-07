@@ -44,12 +44,13 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
     char buff[40];
     sprintf(buff, "%d ", numOfChunks);
+    printf("No. of chunks: %d\n", numOfChunks);
     memcpy((unsigned char*)header, buff, strlen(buff));
     size_t headerSize = strlen(buff);
 
     clock_t begin = clock();
 
-    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
+    for(size_t chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
         size_t realSize = min(chunkSize, fSize - (size_t)offset);
         // printf("%ld ", realSize);
         
