@@ -13,7 +13,7 @@
 #include <zstd.h>      // presumes zstd library is installed
 #include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
+const size_t CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -28,7 +28,7 @@ static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
     return cdict;
 }
 
-int min(int a, int b){
+size_t min(size_t a, size_t b){
     return (a < b) ? a : b;
 }
 
@@ -36,7 +36,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 {
     size_t fSize, outSize = 0;
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
-    int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
+    size_t numOfChunks = (fSize + CHUNK_SIZE - 1ll) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
     void* const out = malloc_orDie(fSize);
     void* const header = malloc_orDie(50 * (numOfChunks + 1)); // For indexes < 10^10
 
@@ -45,8 +45,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     memcpy((unsigned char*)header, buff, strlen(buff));
     size_t headerSize = strlen(buff);
 
-    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
-        size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
+    for(size_t chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
+        size_t realSize = (size_t)min(CHUNK_SIZE, fSize - offset);
         // printf("%ld ", realSize);
         size_t const cBuffSize = ZSTD_compressBound(realSize);
         void* const cBuff = malloc_orDie(cBuffSize);
@@ -90,8 +90,8 @@ static char* createOutFilename_orDie(const char* filename)
     size_t const outL = inL + 20;
     void* outSpace = malloc_orDie(outL);
     memset(outSpace, 0, outL);
-    strcat(outSpace, filename);
-    strcat(outSpace, "_dict_chunks.zst");
+    strcat((char*)outSpace, filename);
+    strcat((char*)outSpace, "_dict_chunks.zst");
     return (char*)outSpace;
 }
  

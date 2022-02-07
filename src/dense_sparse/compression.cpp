@@ -10,7 +10,7 @@
 using namespace sdsl;
 using namespace std;
 
-const int CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
+const size_t CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
 const double eps = 0.01;
  
 /* createDict() :
@@ -26,7 +26,7 @@ static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
     return cdict;
 }
 
-int min(int a, int b){
+size_t min(size_t a, size_t b){
     return (a < b) ? a : b;
 }
 
@@ -66,7 +66,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 {
     size_t fSize;
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
-    int numOfChunks = (fSize + CHUNK_SIZE - 1) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
+    size_t numOfChunks = (fSize + CHUNK_SIZE - 1ll) /  CHUNK_SIZE; // ceil(fSize / CHUNK_SIZE)
 
     void* const header = malloc_orDie(50 * (numOfChunks + 1)); // Increase the header capacity for larger files
 
@@ -89,7 +89,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     char hBuff[40];
     sprintf(hBuff, "%d %ld %d ", numOfChunks, threshold, CHUNK_SIZE);
     memcpy((unsigned char*)header, hBuff, strlen(hBuff));
-    int headerSize = strlen(hBuff);
+    size_t headerSize = strlen(hBuff);
     
     size_t denseSize = numOfChunks * threshold, sparseSize = numOfChunks * CHUNK_SIZE;
     void* const denseStream = malloc_orDie(denseSize);
@@ -97,8 +97,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     memset((unsigned char*)denseStream, 0, sizeof(unsigned char) * denseSize);
     size_t denseOffset = 0, sparseOffset = 0;
 
-    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
-        size_t realSize = (size_t)min(CHUNK_SIZE, (int)fSize - offset);
+    for(size_t chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += CHUNK_SIZE){
+        size_t realSize = min(CHUNK_SIZE, fSize - offset);
         // printf("%ld ", realSize);
         cBuffSize = ZSTD_compressBound(realSize);
         cBuff = malloc_orDie(cBuffSize);

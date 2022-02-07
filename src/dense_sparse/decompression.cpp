@@ -9,7 +9,7 @@
 using namespace sdsl;
 using namespace std;
 
-static int numOfChunks, headerSize = 0;
+static size_t numOfChunks, headerSize = 0;
 static size_t threshold, chunkSize;
  
 /* createDict() :
@@ -41,7 +41,7 @@ void readHeader(size_t** cLengths, void* const cBuff, size_t cSize){
     chunkSize = (size_t)strtol(token, &ptr, 10);
 
     *cLengths = (size_t*)malloc_orDie(sizeof(size_t) * (numOfChunks + 1));
-    for(int i = 0; i < numOfChunks; i++){
+    for(size_t i = 0; i < numOfChunks; i++){
         token = strtok(NULL, delim);
         headerSize += strlen(token) + 1;
         (*cLengths)[i] = (size_t)strtol(token, &ptr, 10);
@@ -91,7 +91,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     fileReadToBitVector(cSparse, fname, offset + denseSize);
     void* const out = malloc_orDie(numOfChunks * chunkSize);
 
-    for(int chunk = 0; chunk < numOfChunks; chunk++){
+    for(size_t chunk = 0; chunk < numOfChunks; chunk++){
         // Size of the compressed block (obtained from the header)
         size_t cBlockSize = cLengths[chunk];
         // To store together the dense and sparse blocks of the current chunk

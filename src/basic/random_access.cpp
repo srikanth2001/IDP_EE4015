@@ -18,10 +18,10 @@ for the random access part. */
 #include <zstd.h>      // presumes zstd library is installed
 #include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-static int numOfChunks, headerSize = 0;
+static size_t numOfChunks, headerSize = 0;
  
 struct entry{ // look-up table entry
-    int cPos, inPos, inSize;
+    size_t cPos, inPos, inSize;
 };
  
 /* createDict() :
@@ -60,19 +60,19 @@ struct entry* readHeader(void* const cBuff, size_t cSize){
     return table;
 }
 
-int getChunkIndex(int idx, struct entry* table){ // Binary search for the chunk's index
-    int l = 0, r = numOfChunks - 1;
+int getChunkIndex(size_t idx, struct entry* table){ // Binary search for the chunk's index
+    size_t l = 0, r = numOfChunks - 1;
     while(l <= r){
-        int m = l + (r - l) / 2;
+        size_t m = l + (r - l) / 2;
         if(idx >= table[m].inPos && idx < table[m + 1].inPos)
-            return m;
+            return (int)m;
         if(idx > table[m].inPos) l = m + 1;
         else r = m - 1;
     }
     return -1;
 }
  
-static void decompress(const char* fname, int start, int end, const ZSTD_DDict* ddict)
+static void decompress(const char* fname, size_t start, size_t end, const ZSTD_DDict* ddict)
 {
     size_t cSize;
     void* const cBuff = mallocAndLoadFile_orDie(fname, &cSize);
@@ -115,12 +115,12 @@ static void decompress(const char* fname, int start, int end, const ZSTD_DDict* 
         exit(1);
     }
 
-    unsigned long long outSize = 0;
+    size_t outSize = 0;
     void* const out = malloc_orDie(end - start + 10); 
     memset(out, 0, end - start + 10);
-    int pos = headerSize + table[startChunk].cPos;
+    size_t pos = headerSize + table[startChunk].cPos;
 
-    for(int chunk = startChunk; chunk <= endChunk; chunk++){
+    for(size_t chunk = startChunk; chunk <= endChunk; chunk++){
         size_t chunkSize = table[chunk + 1].cPos - table[chunk].cPos;
         unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, chunkSize);
         CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);

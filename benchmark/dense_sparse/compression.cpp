@@ -29,7 +29,7 @@ static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
     return cdict;
 }
 
-int min(int a, int b){
+size_t min(size_t a, size_t b){
     return (a < b) ? a : b;
 }
 
@@ -69,7 +69,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 {
     size_t fSize;
     void* const fBuff = mallocAndLoadFile_orDie(fname, &fSize);
-    int numOfChunks = (fSize + chunkSize - 1) /  chunkSize; // ceil(fSize / chunkSize)
+    size_t numOfChunks = (fSize + chunkSize - 1ll) /  chunkSize; // ceil(fSize / chunkSize)
 
     void* const header = malloc_orDie(50 * (numOfChunks + 1)); // Increase the header capacity for larger files
 
@@ -92,7 +92,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     char hBuff[40];
     sprintf(hBuff, "%d %ld %d ", numOfChunks, threshold, chunkSize);
     memcpy((unsigned char*)header, hBuff, strlen(hBuff));
-    int headerSize = strlen(hBuff);
+    size_t headerSize = strlen(hBuff);
     
     denseSize = numOfChunks * threshold;
     const size_t sparseSize = numOfChunks * chunkSize;
@@ -104,7 +104,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     totalTime = 0;
     clock_t begin = clock();
 
-    for(int chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
+    for(size_t chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
         size_t realSize = (size_t)min(chunkSize, (int)fSize - offset);
         // printf("%ld ", realSize);
         cBuffSize = ZSTD_compressBound(realSize);
