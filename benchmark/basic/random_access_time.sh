@@ -6,7 +6,7 @@ ds=`expr $maxSize - $minSize`
 ds=`expr $ds / 10`
 
 echo "Training dictionary...."
-zstd --train -B`expr $minSize / 100` --maxdict=`expr $maxSize / 50` -o $dictPath -r $filePath
+zstd --train -B`expr $maxSize / 500` --maxdict=`expr $maxSize / 5` -o $dictPath -r $filePath
 echo ""
 
 for (( chunkSize=$minSize; chunkSize<=$maxSize; chunkSize+=$ds ))
