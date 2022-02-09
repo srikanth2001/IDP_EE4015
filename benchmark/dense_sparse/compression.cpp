@@ -97,7 +97,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     denseSize = numOfChunks * threshold;
     const size_t sparseSize = numOfChunks * chunkSize;
     void* const denseStream = malloc_orDie(denseSize);
-    bit_vector sparseStream(8 * sparseSize, 0);
+    bit_vector sparseStream(8ll * sparseSize, 0);
     memset((unsigned char*)denseStream, 0, sizeof(unsigned char) * denseSize);
     size_t denseOffset = 0, sparseOffset = 0;
 
@@ -105,7 +105,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     clock_t begin = clock();
 
     for(size_t chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
-        size_t realSize = (size_t)min(chunkSize, (int)fSize - offset);
+        size_t realSize = min(chunkSize, fSize - offset);
         // printf("%ld ", realSize);
         cBuffSize = ZSTD_compressBound(realSize);
         cBuff = malloc_orDie(cBuffSize);
@@ -136,7 +136,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
     sd_vector<> cSparse(sparseStream);
     clock_t end = clock();
-    totalTime = (double)(end - begin) / CLOCKS_PER_SEC;
+    totalTime = (end - begin) / (double)CLOCKS_PER_SEC;
     sumTotalTime += totalTime;
     cSparseSize = size_in_bytes(cSparse);
     compressedSize = denseSize + cSparseSize;

@@ -51,7 +51,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     clock_t begin = clock();
 
     for(size_t chunk = 0, offset = 0; chunk < numOfChunks; chunk++, offset += chunkSize){
-        size_t realSize = min(chunkSize, fSize - (size_t)offset);
+        size_t realSize = min(chunkSize, fSize - offset);
         // printf("%ld ", realSize);
         
         size_t const cBuffSize = ZSTD_compressBound(realSize);
@@ -81,8 +81,8 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     }
 
     clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    sumOfTimes += time_spent;
+    double timeSpent = (end - begin) / (double)CLOCKS_PER_SEC;
+    sumOfTimes += timeSpent;
     compressedSize = outSize;
     compressionRatio = fSize / (double)compressedSize;
 

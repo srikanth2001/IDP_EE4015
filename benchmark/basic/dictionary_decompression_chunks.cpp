@@ -125,7 +125,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     }
 
     clock_t end = clock();
-    totalTime = (double)(end - begin) / CLOCKS_PER_SEC;    
+    totalTime = (end - begin) / (double)CLOCKS_PER_SEC;    
     randomAccessTime /= ((double)numOfChunks * CLOCKS_PER_SEC);
     sumRATime += randomAccessTime;
     sumTotalTime += totalTime;
