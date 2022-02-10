@@ -2,8 +2,8 @@
 filePath=$1
 dictPath=$2
 fileSize=$(stat -c%s "$filePath")
-minSize=`expr $fileSize / 10000`
-maxSize=`expr $fileSize / 1000`
+minSize=$3
+maxSize=$4
 ds=`expr \( $maxSize - $minSize + 9 \) / 10`
 
 for (( chunkSize=$minSize; chunkSize<=$maxSize; chunkSize+=$ds ))
@@ -17,7 +17,7 @@ do
     g++ -L/usr/local/lib/ compression.o -o compressor -lzstd -lsdsl
     ./compressor $filePath $dictPath $chunkSize
 
-    # # Decompressing
+    # Decompressing
     g++ -Wall -w -I/usr/local/include/ -c decompression.cpp -lm
     g++ -L/usr/local/lib/ decompression.o -o decompressor -lzstd -lsdsl
     ./decompressor "$filePath"_ds.ds $dictPath
