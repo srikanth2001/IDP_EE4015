@@ -2,8 +2,10 @@
 filePath=$1
 dictPath=$2
 fileSize=$(stat -c%s "$filePath")
-minSize=$3
-maxSize=$4
+minNumOfChunks=$3
+maxNumOfChunks=$4
+minSize=`expr $fileSize / $maxNumOfChunks`
+maxSize=`expr $fileSize / $minNumOfChunks`
 ds=`expr \( $maxSize - $minSize + 9 \) / 10`
 
 for (( chunkSize=$minSize; chunkSize<=$maxSize; chunkSize+=$ds ))
