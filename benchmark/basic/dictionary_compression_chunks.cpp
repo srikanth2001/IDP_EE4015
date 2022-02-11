@@ -12,7 +12,7 @@
 #include <string.h>    // memset, strcat, strtol
 #include <zstd.h>      // presumes zstd library is installed
 #include <time.h>      // clock
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../../src/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 static size_t chunkSize; 
 static double sumOfTimes = 0, compressionRatio;

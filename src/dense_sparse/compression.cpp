@@ -112,7 +112,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
         }
         else{
             memcpy((unsigned char*)denseStream + denseOffset, cBuff, threshold);
-            copyToBitVector(sparseStream, (unsigned char*)cBuff + threshold, sparseOffset, cSize - threshold);
+            copyArrayToBitVector(sparseStream, (unsigned char*)cBuff + threshold, sparseOffset, cSize - threshold);
         }
 
         denseOffset += threshold;

@@ -97,7 +97,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
         // To store together the dense and sparse blocks of the current chunk
         void* const buff = malloc_orDie(cBlockSize);
         memset((unsigned char*)buff, 0, cBlockSize);
-        
+
         if(cBlockSize <= threshold){
             // Copy the dense stream 
             memcpy(buff, (unsigned char*)cBuff + offset + chunk * threshold, cBlockSize);
@@ -106,7 +106,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
             // Copy the dense stream 
             memcpy(buff, (unsigned char*)cBuff + offset + chunk * threshold, threshold);
             // Copy the sparse stream
-            copySdVectorSliceToArray((unsigned char*)buff + threshold, cSparse, chunk * chunkSize, cBlockSize - threshold);
+            copySdVectorSliceToArrayOpt((unsigned char*)buff + threshold, cSparse, chunk * chunkSize, cBlockSize - threshold);
         }
 
         // Decompress the block

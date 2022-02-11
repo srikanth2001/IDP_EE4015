@@ -12,7 +12,7 @@
 #include <stdlib.h>    // free
 #include <zstd.h>      // presumes zstd library is installed
 #include <time.h>      // clock
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../../src/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 static FILE* fptr;
 static double sumOfTimes = 0;

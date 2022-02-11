@@ -16,7 +16,7 @@ for the random access part. */
 #include <stdlib.h>    // free
 #include <string.h>    // strtok
 #include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "../../src/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 static int numOfChunks, headerSize = 0;
  
