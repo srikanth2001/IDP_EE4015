@@ -191,6 +191,6 @@ int main(int argc, const char** argv)
     printf("Total time for decompression: %lf s\n\n", sumTotalTime / noi);
  
     ZSTD_freeDDict(dictPtr);
-    printf("All %u files correctly decoded\n", argc-2);
+    // printf("All %u files correctly decoded\n", argc-2);
     return 0;
 }
