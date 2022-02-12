@@ -3,10 +3,9 @@
 #include <string.h>    // memset, strcat
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
 #include <fstream>
-#include <sdsl/bit_vectors.hpp>
+#include "../sd_vector.hpp"
 #include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-using namespace sdsl;
 using namespace std;
 
 static size_t numOfChunks, headerSize = 0;

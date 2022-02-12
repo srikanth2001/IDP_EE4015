@@ -4,10 +4,9 @@
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
 #include <fstream>
 #include <time.h>      // clock
-#include <sdsl/bit_vectors.hpp>
+#include "../../src/sd_vector.hpp"
 #include "../../src/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-using namespace sdsl;
 using namespace std;
 
 static size_t numOfChunks, headerSize = 0, threshold, chunkSize;

@@ -41,7 +41,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     void* const header = malloc_orDie(50 * (numOfChunks + 1)); // For indexes < 10^10
 
     char buff[40];
-    sprintf(buff, "%d ", numOfChunks);
+    sprintf(buff, "%ld ", numOfChunks);
     memcpy((unsigned char*)header, buff, strlen(buff));
     size_t headerSize = strlen(buff);
 
@@ -64,7 +64,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
 
         memcpy((unsigned char*)out + outSize, cBuff, cSize);
 
-        sprintf(buff, "%ld %d %ld ", outSize, offset, realSize); // header entries for each chunk
+        sprintf(buff, "%ld %ld %ld ", outSize, offset, realSize); // header entries for each chunk
         memcpy((unsigned char*)header + headerSize, buff, strlen(buff));
         
         headerSize += strlen(buff);

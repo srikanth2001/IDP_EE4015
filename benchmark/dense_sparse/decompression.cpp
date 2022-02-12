@@ -4,10 +4,9 @@
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
 #include <fstream>
 #include <time.h>
-#include <sdsl/bit_vectors.hpp>
+#include "../../src/sd_vector.hpp"
 #include "../../src/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-using namespace sdsl;
 using namespace std;
 
 static size_t numOfChunks, headerSize = 0;
@@ -110,7 +109,7 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
             // Copy the dense stream 
             memcpy(buff, (unsigned char*)cBuff + offset + chunk * threshold, threshold);
             // Copy the sparse stream
-            copyToArray((unsigned char*)buff + threshold, cSparse, chunk * chunkSize, cBlockSize - threshold);
+            copySdVectorSliceToArray((unsigned char*)buff + threshold, cSparse, chunk * chunkSize, cBlockSize - threshold);
         }
 
         // Decompress the block

@@ -20,11 +20,11 @@
 #include <errno.h>     // errno
 #include <sys/stat.h>  // stat
 #include <zstd.h>
+#include "sd_vector.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include <iostream>
 
 using namespace std;
-using namespace sdsl;
  
 /*
  * Define the returned error code from utility functions.
@@ -237,7 +237,7 @@ static void saveFile_orDie(const char* fileName, const void* buff, size_t buffSi
 }
 
 // Copy contents from an array to a bit-vector
-void copyArrayToBitVector(bit_vector& b, unsigned char* data, size_t bOffset, size_t size){
+void copyArrayToBitVector(sdsl::bit_vector& b, unsigned char* data, size_t bOffset, size_t size){
     for(size_t i = 0; i < size; i++){
         unsigned char currByte = *(data + i);
         for(int pos = 0; pos < 8; pos++){
@@ -247,7 +247,7 @@ void copyArrayToBitVector(bit_vector& b, unsigned char* data, size_t bOffset, si
 }
 
 // Copy contents of bit vector to an array
-void copyBitVectorToArray(unsigned char* data, bit_vector& b){
+void copyBitVectorToArray(unsigned char* data, sdsl::bit_vector& b){
     size_t dataSize = (b.size() + 7) / 8; // Size of b in bytes
     for(size_t i = 0; i < dataSize; i++){
         unsigned char currByte = 0;
@@ -260,7 +260,7 @@ void copyBitVectorToArray(unsigned char* data, bit_vector& b){
 
 // Copy contents from an sd vector's slice sdb[8 * bOffset .... 8 * (bOffSet + size - 1)] to an array
 void copySdVectorSliceToArrayOpt(unsigned char* data, sd_vector<>& sdb, size_t bOffset, size_t sizeInBytes){
-    bit_vector b = sdb.get(8ll * bOffset, 8ll * sizeInBytes);
+    sdsl::bit_vector b = sdb.get(8ll * bOffset, 8ll * sizeInBytes);
     copyBitVectorToArray(data, b);
 }
 
@@ -275,8 +275,8 @@ void copySdVectorSliceToArray(unsigned char* data, sd_vector<>& sdb, size_t bOff
 }
 
 // Construct bit vector from the pointer to a byte array
-bit_vector constructBitVectorFromArray(const void* data, size_t dataSize){
-    bit_vector b(dataSize * 8ll);
+sdsl::bit_vector constructBitVectorFromArray(const void* data, size_t dataSize){
+    sdsl::bit_vector b(dataSize * 8ll);
     for(size_t i = 0; i < dataSize; i++){
         unsigned char currByte = *((unsigned char*)data + i);
         for(int pos = 0; pos < 8; pos++){

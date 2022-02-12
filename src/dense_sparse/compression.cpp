@@ -4,10 +4,10 @@
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
 #include <fstream>
 #include <iostream>
+#include "../sd_vector.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include "../common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
-using namespace sdsl;
 using namespace std;
 
 const size_t CHUNK_SIZE = 5 * (1 << 20); // Size of each chunk = 5 MB 
@@ -87,13 +87,13 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     const size_t threshold = (size_t)(CHUNK_SIZE * (1 + eps) * H_X);
 
     char hBuff[40];
-    sprintf(hBuff, "%d %ld %d ", numOfChunks, threshold, CHUNK_SIZE);
+    sprintf(hBuff, "%ld %ld %ld ", numOfChunks, threshold, CHUNK_SIZE);
     memcpy((unsigned char*)header, hBuff, strlen(hBuff));
     size_t headerSize = strlen(hBuff);
     
     size_t denseSize = numOfChunks * threshold, sparseSize = numOfChunks * CHUNK_SIZE;
     void* const denseStream = malloc_orDie(denseSize);
-    bit_vector sparseStream(8 * sparseSize, 0);
+    sdsl::bit_vector sparseStream(8 * sparseSize, 0);
     memset((unsigned char*)denseStream, 0, sizeof(unsigned char) * denseSize);
     size_t denseOffset = 0, sparseOffset = 0;
 
