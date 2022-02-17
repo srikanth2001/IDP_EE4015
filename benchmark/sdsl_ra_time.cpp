@@ -17,16 +17,16 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 sdsl::bit_vector generateBitVector(double sparsity){
     sdsl::bit_vector b(BIT_VECTOR_SIZE, 0);
-    size_t m = sparsity * BIT_VECTOR_SIZE;
-    void* posList = malloc_orDie(12ll * (m + 1ll));
+    size_t numOfOnes = sparsity * BIT_VECTOR_SIZE;
+    void* posList = malloc_orDie(20ll * (numOfOnes + 1ll));
 
     char sIdx[20];
     size_t offset = 0;
-    sprintf(sIdx, "%ld ", m);
+    sprintf(sIdx, "%ld ", numOfOnes);
     memcpy((unsigned char*)posList, sIdx, strlen(sIdx));
     offset += strlen(sIdx);
     
-    for(size_t iter = 0; iter < m; iter++){
+    for(size_t iter = 0; iter < numOfOnes; iter++){
         size_t idx = (size_t)rng() % BIT_VECTOR_SIZE;
         b[idx] = 1;
         sprintf(sIdx, "%ld ", idx);
@@ -42,11 +42,12 @@ int accessIndexInFile(void* fBuff, size_t reqIdx){
     char delim[2] = " ";
     char* ptr;
     char* token = strtok((char*)fBuff, delim);
-    size_t m = strtol(token, &ptr, 10);
+    size_t numOfOnes = strtol(token, &ptr, 10);
+    // printf("%ld ", numOfOnes);
     size_t currVal;
-    for(size_t i = 0; i < m; i++){
+    for(size_t i = 0; i < numOfOnes; i++){
         token = strtok(NULL, delim);
-        currVal = strtol(token, &ptr, 10);
+        if(token != NULL) currVal = strtol(token, &ptr, 10);
         if(currVal == reqIdx)
             return 1;
     }
@@ -88,7 +89,7 @@ int main(){
         cout << "Avg. random access time: " << avgTimeSdsl / 1000.0 << " microseconds\n\n";
         cout << "Using a lookup file:\nFile size: " << fSize << " B\n";
         cout << "Avg. random access time: " << avgTimeFile / 1000.0 << " microseconds\n\n";
-        // free(fBuff);
+        free(fBuff);
     }
     
     return 0;
