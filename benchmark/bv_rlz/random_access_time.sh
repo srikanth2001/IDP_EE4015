@@ -22,5 +22,5 @@ do
     # Decompressing
     g++ -Wall -w -I/usr/local/include/ -c decompression.cpp -lm
     g++ -L/usr/local/lib/ decompression.o -o decompressor -lzstd -lsdsl
-    ./decompressor "$filePath".bv_rlz $dictPath
+    ./decompressor "$filePath"_bv_rlz.bv_rlz $dictPath
 done

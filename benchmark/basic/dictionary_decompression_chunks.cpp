@@ -98,8 +98,8 @@ static void decompress(const char* fname, const char* oname, const ZSTD_DDict* d
     clock_t begin = clock();
 
     for(size_t chunk = 0, pos = offset + table[0]; chunk < numOfChunks; chunk++){
-        size_t cBlockSize = table[chunk + 1] - table[chunk];
         clock_t cBegin = clock();
+        size_t cBlockSize = table[chunk + 1] - table[chunk];
         unsigned long long const rSize = ZSTD_getFrameContentSize((unsigned char*)cBuff + pos, cBlockSize);
         CHECK(rSize != ZSTD_CONTENTSIZE_ERROR, "%s: not compressed by zstd!", fname);
         CHECK(rSize != ZSTD_CONTENTSIZE_UNKNOWN, "%s: original size unknown!", fname);

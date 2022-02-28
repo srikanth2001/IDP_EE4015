@@ -106,7 +106,7 @@ static char* createOutFilename_orDie(const char* filename)
     void* outSpace = malloc_orDie(outL);
     memset(outSpace, 0, outL);
     strcat((char*)outSpace, filename);
-    strcat((char*)outSpace, ".bv_rlz");
+    strcat((char*)outSpace, "_bv_rlz.bv_rlz");
     return (char*)outSpace;
 }
  
