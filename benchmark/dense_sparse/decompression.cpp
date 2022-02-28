@@ -48,17 +48,6 @@ void readHeader(size_t** cLengths, void* const cBuff, size_t cSize){
         (*cLengths)[i] = (size_t)strtol(token, &ptr, 10);
     }
 }
-
-void readFileToSdVector(sd_vector<>& cSparse, const char* fname, size_t offset){
-    ifstream in(fname, ifstream::binary);
-    if( !in ) { // file couldn't be opened
-        printf("Error: file could not be opened\n");
-        exit(1);
-    }
-    in.seekg(offset);
-    cSparse.load(in);
-    in.close();
-}
  
 static void decompress(const char* fname, const char* oname, const ZSTD_DDict* ddict)
 {

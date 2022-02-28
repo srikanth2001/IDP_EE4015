@@ -2,8 +2,6 @@
 #include <stdlib.h>    // free
 #include <string.h>    // memset, strcat, strtol
 #include <zstd.h>      // presumes zstd and sdsl libraries are installed
-#include <fstream>
-#include <iostream>
 #include <time.h>
 #include "../../src/sd_vector.hpp"
 #include <sdsl/bit_vectors.hpp>
@@ -31,38 +29,6 @@ static ZSTD_CDict* createCDict_orDie(const char* dictFileName, int cLevel)
 
 size_t min(size_t a, size_t b){
     return (a < b) ? a : b;
-}
-
-void filePutContents(const char* fname, const void* ptr, const size_t size, bool append = false){
-    ofstream out;
-    if (append)
-        out.open(fname, std::ios_base::app);
-    else
-        out.open(fname);
-
-    if( !out ) { // file couldn't be opened
-        printf("Error: file could not be opened\n");
-        exit(1);
-    }
-    
-    out.write((const char*)ptr, size);
-    out.close();
-}
-
-void filePutContents(const char* fname, const sd_vector<>& sdb, bool append = false){
-    ofstream out;
-    if (append)
-        out.open(fname, ios_base::app);
-    else
-        out.open(fname);
-
-    if( !out ) { // file couldn't be opened
-        printf("Error: file could not be opened\n");
-        exit(1);
-    }
-    
-    sdb.serialize(out);
-    out.close();
 }
 
 static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdict)

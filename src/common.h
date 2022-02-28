@@ -23,6 +23,7 @@
 #include "sd_vector.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
  
@@ -234,6 +235,52 @@ static void saveFile_orDie(const char* fileName, const void* buff, size_t buffSi
         perror(fileName);
         exit(ERROR_fclose);
     }
+}
+
+// Writes the contents of an array to the file using file-stream
+void filePutContents(const char* fname, const void* ptr, const size_t size, bool append = false){
+    ofstream out;
+    if (append)
+        out.open(fname, std::ios_base::app);
+    else
+        out.open(fname);
+
+    if( !out ) { // file couldn't be opened
+        printf("Error: file could not be opened\n");
+        exit(1);
+    }
+    
+    out.write((const char*)ptr, size);
+    out.close();
+}
+
+// Writes the contents of sd_vector to the file using file-stream
+void filePutContents(const char* fname, const sd_vector<>& sdb, bool append = false){
+    ofstream out;
+    if (append)
+        out.open(fname, ios_base::app);
+    else
+        out.open(fname);
+
+    if( !out ) { // file couldn't be opened
+        printf("Error: file could not be opened\n");
+        exit(1);
+    }
+    
+    sdb.serialize(out);
+    out.close();
+}
+
+// Read file contents to an sd_vector
+void readFileToSdVector(sd_vector<>& cSparse, const char* fname, size_t offset){
+    ifstream in(fname, ifstream::binary);
+    if( !in ) { // file couldn't be opened
+        printf("Error: file could not be opened\n");
+        exit(1);
+    }
+    in.seekg(offset);
+    cSparse.load(in);
+    in.close();
 }
 
 // Copy contents from an array to a bit-vector
