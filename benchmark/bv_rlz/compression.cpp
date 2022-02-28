@@ -18,7 +18,7 @@
 
 static size_t chunkSize; 
 static double sumOfTimes = 0, compressionRatio;
-static size_t compressedSize, dictSize;
+static size_t compressedSize, dictSize, headerSize;
  
 /* createDict() :
    `dictFileName` is supposed to have been created using `zstd --train` */
@@ -44,7 +44,7 @@ static void compress(const char* fname, const char* oname, const ZSTD_CDict* cdi
     void* const out = malloc_orDie(fSize + 15ll * numOfChunks);
 
     char hBuff[40];
-    size_t headerSize = 0;
+    headerSize = 0;
     sprintf(hBuff, "%ld %ld ", numOfChunks, fSize);
     filePutContents(oname, (void*)hBuff, strlen(hBuff));
     headerSize += strlen(hBuff);
@@ -140,7 +140,8 @@ int main(int argc, const char** argv)
             free(outFilename);
         }
     }
-    printf("Compressed file size: %ld B\n", compressedSize);
+    printf("Total compressed file size: %ld B\n", compressedSize);
+    printf("Compressed header size: %ld B\n", headerSize);
     printf("Compression ratio: %lf\n", compressionRatio);
     printf("Avg. compression time: %lf s\n", sumOfTimes / noi);
 
