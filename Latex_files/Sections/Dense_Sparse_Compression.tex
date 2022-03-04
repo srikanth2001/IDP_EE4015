@@ -1,0 +1,55 @@
+\subsection{Dense-Sparse stream based compression}
+In this scheme, the file $X$ is divided into fixed-size chunks and each chunk is stored using two streams: dense stream $D$ and sparse stream $S$. This scheme is a modified version of [1]. \\
+\textbf{Compression:} Let $C_i$ be the compressed block corresponding to the original block $B_i$, and $L_i$ be the length of $C_i$. The typicality of the block is decided using the threshold $T = b (H(X) + \epsilon)$.
+\begin{itemize}
+    \item If $C_i \leq T $, then \\~\\
+         \smallskip \hspace{5ex}$
+        \begin{gathered}
+            D_i = C_i[0 \ldots L_i-1] \\
+            S_i = 0 ^ b
+        \end{gathered}
+        $
+    \item Else,\\~\\
+        \smallskip \hspace{5ex} $
+        \begin{gathered}
+            D_i = C_i[0 \ldots T-1] \\
+            S_i = C_i[T \ldots L_i-1]
+        \end{gathered}
+        $
+\end{itemize}
+Each of $D_i$ and $S_i$ are padded with zeroes such that the length of $D_i$ is $T$ and the length of $S_i$ is $b$. 
+Finally, the sparse stream $S$ is compressed using a sparse bit-vector compressor.
+
+The header $h$ is stored as follows-
+$$
+\begin{gathered}
+    h_i = \sum_{j=0}^{i} L_j, \text{ for } 0 \leq i \leq N_b - 1 \\
+\end{gathered}
+$$
+
+\textbf{Decompression:} To decompress the $i^{th}$ block, the LZ-compressed block $C_{i}^{'}$ needs to be constructed. The start position and the compressed size of the block is obtained from the header as follows-
+$$
+\begin{gathered}
+    start_i = h_i \\
+    size_i = h_{i+1} - h_i,  \text{ for } 0 \leq i \leq N_b - 1 \\
+\end{gathered}
+$$
+The compressed block $C_{i}^{'}$ is constructed as follows-
+\begin{itemize}
+    \item If $size_i \leq T $, then \\~\\
+         \smallskip \hspace{5ex}$
+        \begin{gathered}
+            C_i ^ {'} = D[0 \ldots size_i - 1]
+        \end{gathered}
+        $ 
+    \item Else,\\~\\
+         \smallskip \hspace{5ex}$
+        \begin{gathered}
+            C_i ^ {'} = D[0 \ldots T - 1] \quad || \quad S[0 \ldots size_i - T - 1]
+        \end{gathered}
+        $
+        
+        where $||$ is the concatenation operator.
+\end{itemize}
+The sparse stream values are accessed using the random access operator on the sparse bit-vector.
+The block $C_i ^ {'}$ can now be decompressed using the Lempel-Ziv algorithm to obtain $B_i$.

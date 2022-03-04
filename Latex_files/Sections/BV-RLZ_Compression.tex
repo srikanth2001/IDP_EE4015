@@ -1,0 +1,28 @@
+\subsection{BV-RLZ compression}
+In this scheme, the file is divided into fixed-size chunks and each chunk is compressed, same as in the RLZ scheme. The header is stored as a compressed bit-vector.
+
+\textbf{Compression:} The sequence $X$ is divided into blocks of length $b$ and is compressed block by block. Let the compressed length of the $i^{th}$ block be $L_i$. The header $h$ is stored using the bit-vector data structure. Let $pos$ be defined as -
+$$
+\begin{gathered}
+    pos_i = \sum_{j=0}^{i} L_j, \text{ for } 0 \leq i \leq N_b - 1 \\
+\end{gathered}
+$$
+Let $L_X = \sum_{j=0}^{N_b - 1} L_i$ be the size of the compressed file.
+Initially, $h = 0^{L_X}$. The bits of $h$ are set as follows-
+$$
+\begin{gathered}
+    h_{pos_i} = 1, \text{ for } 0 \leq i \leq N_b - 1
+\end{gathered}
+$$
+The bit-vector $h$ is compressed using the sparse bit-vector compressor.
+
+\textbf{Decompression:} To access the $i^{th}$ block, the start position and the compressed size of the block is obtained from the header as follows-
+$$
+\begin{gathered}
+    start_i = select_h(i + 1) \\
+    size_i = select_h(i + 2) - select_h(i + 1),  \text{ for } 0 \leq i \leq N_b - 1 \\
+\end{gathered}
+$$
+where $select_h(i)$ is the standard select operator on the compressed bit-vector $h$.
+Using these values, the compressed block can be constructed and decompressed using the LZ algorithm.
+
