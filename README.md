@@ -1,10 +1,8 @@
-# IDP_EE4015
+# IDP EE4015
 
-## Basic LZ compression
-Compress and Decompress using ZSTD library
-
-### Installation of ZSTD
+### Installation of ZSTD and SDSL
 * To install ZSTD and additional header files, check https://www.iith.ac.in/~shashankvatedka/html/miscellaneous/zstd_tutorial.html
+* To install SDSL, check https://github.com/simongog/sdsl-lite#installation. Use `/usr/local/` as the installation path.
 
 ### Create a dictionary
 * Navigate to the folder containing your text files.
@@ -24,11 +22,14 @@ Compress and Decompress using ZSTD library
 * Run the script using -
     ``` $ ./createDict.sh ```
 
+## Basic LZ compression
+In this scheme, the file is divided into fixed-size chunks and each chunk is compressed using Zstd. A header containing the start positions (in the compressed file) of each of the chunks is stored in the file.
+
 ### Compiling
 * To compile dictionary_compression_chunks.cpp, run
     ```$ g++ -Wall -I/usr/local/include/ -c dictionary_compression_chunks.cpp -lm```
 * For linking, use
-    ```$ g++ -L/usr/local/lib/ dictionary_compression_chunks.o -o dict_compressor_chunks -lzstd```
+    ```$ g++ -L/usr/local/lib/ dictionary_compression_chunks.o -o dict_compressor_chunks -lzstd -lsdsl```
 * This will create an executable file called dict_compressor_chunks. To run this, use
     ```$ ./dict_compressor_chunks [data file path] [dictionary path]```
 
@@ -87,16 +88,8 @@ S. no. | Dictionary size (in B)  | Compressed size (in B) | Average compression 
 | 9 | 944737 | 35564179 | 0.675 |
 | 10 | 1048570 | 35491525 | 0.665 |
 
-For the `enwik9` text file,
-#### Varying chunk size
-The below data was obtained using dictionary compression by varying the chunk size from 500KB to 50MB.
-
 ## Dense Sparse stream-based compression
-Use the same dictionaries as in LZ compression
-
-### Installation of SDSL
-* To install SDSL, check https://github.com/simongog/sdsl-lite#installation
-* Use `/usr/local/` as the installation path.
+In this scheme, each of the compressed chunk is stored using two streams: dense stream and sparse stream based on the typicality of the chunk. The sparse stream is then compressed using a bit-vector compressor.
 
 ### Compiling
 * Navigate to the `dense_sparse` directory.
@@ -106,6 +99,8 @@ Use the same dictionaries as in LZ compression
     ```$ g++ -L/usr/local/lib/ compression.o -o compressor -lzstd -lsdsl```
 * This will create an executable file called compressor. To run this, use
     ```$ ./compressor [data file path] [dictionary path]```
+
+**Note:** For decompressing, there are two programs. `decompression.cpp` uses the random access operator [ ] provided by the library to access the contents of the compressed bit-vector. `decompression_opt.cpp` uses a custom method `get()` to access the contents of the compressed bit-vector, which is faster than [ ] to get a contiguous sequence of bits in the bit-vector.
 
 ### Results
 For the `enwik8` text file,
@@ -124,11 +119,29 @@ For the `enwik8` text file,
 |10|4769792 | 0.947722| 0.434883| 9.166946  |
 |11|5242880 | 0.896644| 0.516508|10.365360 |
 
-For the `enwik9` text file,
-#### Varying chunk size
-The below data was obtained using dictionary compression by varying the chunk size from 500KB to 50MB.
+## BV-RLZ compression
+In this scheme, we store the header as a compressed bit-vector and the chunks are compressed using Zstd.
 
-## Links
+### Compiling
+* Navigate to the `bv_rlz` directory.
+* To compile compression.cpp, run
+    ```$ g++ -Wall -I/usr/local/include/ -c compression.cpp -lm```
+* For linking, use
+    ```$ g++ -L/usr/local/lib/ compression.o -o compressor -lzstd -lsdsl```
+* This will create an executable file called compressor. To run this, use
+    ```$ ./compressor [data file path] [dictionary path]```
+
+## Benchmarking
+For benchmarking, navigate to the `benchmark/` directory. In each of the `basic/`, `dense_sparse/`, `bv_rlz/` directories, you find `random_access_time.sh` and `random_access_time_simple.sh`. To run the script -
+* Add execute permissions using, ``` $ chmod +x random_access_time.sh ```
+
+* Run the script using -
+    ``` $ random_access_time.sh [file path] [dictionary path] [minimum number of chunks] [maximum number ofchunks]```
+
+For `random_access_time_simple.sh`, you must not specify the dictionary path, because the compression is done without dictionary.
+
+
+## Links and References
 * Text files: https://deepai.org/dataset/enwik8, https://archive.org/details/enwik9
 * For more info on ZSTD, check https://facebook.github.io/zstd/
 * Getting started with ZSTD: https://zstd.docsforge.com/dev/getting-started/
