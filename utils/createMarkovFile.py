@@ -1,6 +1,6 @@
 import numpy as np
 
-path = '../data/markov'
+path = '../data/markov/markov'
 data = ''
 fileSize = 10 * (2 ** 30) # 10 GB
 p0 = 0.5
