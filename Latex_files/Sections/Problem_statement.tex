@@ -1,0 +1,36 @@
+\section{Problem Setup}
+
+A sequence $X^{n}$ is generated from a stationary and ergodic source with alphabet $x$. We would like to losslessly store $X^{n}$ using the minimum expected number of bits such that every symbol $X_{i}, \mathrm{i}=0, \ldots, \mathrm{n-1}$, can be reliably reconstructed by accessing no more than to of the stored bits in the memory. A compression scheme with blocklength $\mathrm{n}$, random access $t^{(n)}$, and the rate $R^{(n)}$ is defined by an encoder:
+
+$$
+f^{(n)}: \boldsymbol{X}^{(n)} \rightarrow\{0,1\}^{*}
+$$
+
+And decoder pairs $\left(S_{i}^{(n)}, g_{i}^{(n)}\right)$ :
+
+$$
+\begin{gathered}
+S_{i} \subseteq N,\left|S_{i}^{(n)}\right|=t^{(n)}, \\
+g_{i}^{(n)}:\{0,1\}^{t^{(n)}} \rightarrow x, \forall i=0, \ldots, n-1
+\end{gathered}
+$$
+
+such that the following are true:
+
+$$
+\begin{gathered}
+R^{(n)}=\frac{E\left[f^{(n)}\left(X^{n}\right)\right]}{n}, \\
+g^{(n)}\left(\left\{f^{(n)}\left(X^{(n)}\right)\right\}_{S_{i}^{(n)}}\right)=X_{i}
+\end{gathered}
+$$
+
+Here, $\left\{f^{(n)}\left(X^{n}\right)\right\}_{S_{i}^{(n)}}$ denotes the subsequence of $f^{(n)}\left(X^{n}\right)$ that belongs to the positions in $S_{i}^{(n)}$. The pair $(R, t)$ is said to be achievable if there exists a sequence of compression schemes (indexed by $n$ ) such that
+
+$$
+\begin{array}{lll}
+\lim _{n \rightarrow \infty} & R^{(n)} & \rightarrow R \\
+\lim _{n \rightarrow \infty} & t^{(n)} & \rightarrow t
+\end{array}
+$$
+
+In this work, We implement and compare the average random time vs compression size of three different compression schemes such as RLZ , Dense sparse and BV-RLZ 

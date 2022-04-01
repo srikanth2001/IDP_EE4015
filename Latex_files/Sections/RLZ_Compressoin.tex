@@ -1,0 +1,19 @@
+\subsection{RLZ Compression}
+In this scheme, we divide the file into fixed-size chunks and compress each chunk using lempel-ziv algorithm  both with  dictionary and without dictionary compression. 
+
+\textbf{Compression:} The sequence $X$ is divided into blocks of length $b$ and is compressed block by block. Let the compressed length of the $i^{th}$ block be $L_i$ and the number of blocks be $N_b$. The header $h$ is stored as follows-
+$$
+\begin{gathered}
+    h_i = \sum_{j=0}^{i} L_j, \text{ for } 0 \leq i \leq N_b - 1 \\
+\end{gathered}
+$$
+
+\textbf{Decompression:} To access the $i^{th}$ block, the start position and the compressed size of the block is obtained from the header as follows-
+$$
+\begin{gathered}
+    start_i = h_i \\
+    size_i = h_{i+1} - h_i,  \text{ for } 0 \leq i \leq N_b - 1 \\
+\end{gathered}
+$$
+Using these values, the block can be accessed and decompressed.
+
