@@ -106,7 +106,7 @@ int main(int argc, const char** argv)
         return 1;
     }
  
-    const int noi = 10;
+    const int noi = 5;
     
     for(int iter = 0; iter < noi; iter++){
         for (int u=1; u<argc; u++){

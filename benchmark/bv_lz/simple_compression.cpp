@@ -104,7 +104,7 @@ int main(int argc, const char** argv)
     // The below code is for compressing using the chunk size specified in argv
     chunkSize = (size_t)strtol(argv[argc - 1], &ptr, 10);
 
-    const int noi = 10;
+    const int noi = 5;
     
     for(int iter = 0; iter < noi; iter++){
         for (int u=1; u<argc-1; u++) {
