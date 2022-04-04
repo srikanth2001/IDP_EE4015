@@ -22,10 +22,11 @@
 * Run the script using -
     ``` $ ./createDict.sh ```
 
-## Basic LZ compression
-In this scheme, the file is divided into fixed-size chunks and each chunk is compressed using Zstd. A header containing the start positions (in the compressed file) of each of the chunks is stored in the file.
+## Tabulated LZ compression (TAB-LZ)
+In this scheme, the file is divided into fixed-size chunks and each chunk is compressed using Zstd. A header containing the start positions (in the compressed file) of each of the chunks is stored in the form of a lookup table, in the file itself.
 
 ### Compiling
+* Navigate to the `src/tab_lz` directory.
 * To compile dictionary_compression_chunks.cpp, run
     ```$ g++ -Wall -I/usr/local/include/ -c dictionary_compression_chunks.cpp -lm```
 * For linking, use
@@ -88,11 +89,11 @@ S. no. | Dictionary size (in B)  | Compressed size (in B) | Average compression 
 | 9 | 944737 | 35564179 | 0.675 |
 | 10 | 1048570 | 35491525 | 0.665 |
 
-## Dense Sparse stream-based compression
+## Dense Sparse stream-based compression (DS-LZ)
 In this scheme, each of the compressed chunk is stored using two streams: dense stream and sparse stream based on the typicality of the chunk. The sparse stream is then compressed using a bit-vector compressor.
 
 ### Compiling
-* Navigate to the `dense_sparse` directory.
+* Navigate to the `src/ds_lz` directory.
 * To compile compression.cpp, run
     ```$ g++ -Wall -I/usr/local/include/ -c compression.cpp -lm```
 * For linking, use
@@ -119,11 +120,11 @@ For the `enwik8` text file,
 |10|4769792 | 0.947722| 0.434883| 9.166946  |
 |11|5242880 | 0.896644| 0.516508|10.365360 |
 
-## BV-RLZ compression
+## Bit-vector header and LZ compression (BV-LZ)
 In this scheme, we store the header as a compressed bit-vector and the chunks are compressed using Zstd.
 
 ### Compiling
-* Navigate to the `bv_rlz` directory.
+* Navigate to the `src/bv_lz` directory.
 * To compile compression.cpp, run
     ```$ g++ -Wall -I/usr/local/include/ -c compression.cpp -lm```
 * For linking, use
@@ -131,8 +132,10 @@ In this scheme, we store the header as a compressed bit-vector and the chunks ar
 * This will create an executable file called compressor. To run this, use
     ```$ ./compressor [data file path] [dictionary path]```
 
+**General note:** For schemes without dictionary, you must not specify the dictionary path in the arguments.
+
 ## Benchmarking
-For benchmarking, navigate to the `benchmark/` directory. In each of the `basic/`, `dense_sparse/`, `bv_rlz/` directories, you find `random_access_time.sh` and `random_access_time_simple.sh`. To run the script -
+For benchmarking, navigate to the `benchmark/` directory. In each of the `tab_lz/`, `ds_lz/`, `bv_lz/` directories, you find `random_access_time.sh` and `random_access_time_simple.sh`. To run the script -
 * Add execute permissions using, ``` $ chmod +x random_access_time.sh ```
 
 * Run the script using -
