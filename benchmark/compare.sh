@@ -23,6 +23,7 @@ done
 
 avgCompressionTime=$(echo "scale=3; $avgCompressionTime / $noi" | bc)
 avgDecompressionTime=$(echo "scale=3; $avgDecompressionTime / $noi" | bc)
+echo "Original file size: $(echo "scale=3; $(stat -c%s "$FILE_NAME")/(2^30)" | bc) GB"
 echo "Compressed file size: $(echo "scale=3; $compressedFileSize/(2^30)" | bc) GB"
 echo "Compression time: $avgCompressionTime ms"
 echo "Decompression time: $avgDecompressionTime ms"
